@@ -1,0 +1,5 @@
+key_Sp1_temperature：Sp1测量点的温度
+key_Bx1_max_temperature：bx1测量区域的最高温度
+key_Bx1_avg_temperature：bx1测量区域的平均温度
+key_Bx1_min_temperature：bx1测量区域的最低温度
+key_relative_humidity：相对湿度

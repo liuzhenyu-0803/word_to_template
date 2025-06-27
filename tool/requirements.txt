@@ -1,0 +1,7 @@
+# 主要依赖
+beautifulsoup4==4.13.4
+websockets==15.0.1
+python-docx==1.2.0
+lxml==6.0.0
+openai==1.92.2
+pydocx==0.9.10

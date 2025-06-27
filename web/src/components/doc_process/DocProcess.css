@@ -1,0 +1,69 @@
+﻿.doc-process {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.doc-process-left {
+  min-width: 200px;
+  height: 100%;
+  background-color: #f8f9fa;
+}
+
+.doc-process-right {
+  min-width: 200px;
+  height: 100%;
+  background-color: #ffffff;
+}
+
+.doc-process-splitter {
+  width: 4px;
+  height: 100%;
+  background-color: #e9ecef;
+  cursor: col-resize;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.doc-process-splitter:hover {
+  background-color: #007bff;
+}
+
+.doc-process-splitter:active {
+  background-color: #0056b3;
+}
+
+.splitter-line {
+  width: 1px;
+  height: 40px;
+  background-color: #6c757d;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.doc-process-splitter:hover .splitter-line {
+  opacity: 1;
+  background-color: #ffffff;
+}
+
+.doc-process-splitter:active .splitter-line {
+  background-color: #ffffff;
+}
+
+/* 拖拽时的样式 */
+.doc-process.dragging {
+  user-select: none;
+}
+
+.doc-process.dragging * {
+  pointer-events: none;
+}
+
+.doc-process.dragging .doc-process-splitter {
+  pointer-events: auto;
+}

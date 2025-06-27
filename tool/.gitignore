@@ -1,0 +1,73 @@
+# Python 缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.env
+.venv
+
+# 测试/缓存文件
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# IDE 和版本控制文件
+.idea/
+.svn/
+
+# 文档目录控制 - 只保留指定文件
+document/*
+!document/document.docx
+!document/key_descriptions/
+!document/test_documents/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 项目特定输出和临时文件
+*.log
+*.tmp
+
+# API密钥和敏感信息
+.env
+secrets.json
+*_key.txt
+*_token.txt
+
+# 二进制文件和压缩文件（排除需要保留的document.docx）
+document/*.zip
+document/*.pdf
+document/*.html
+*.tar.gz
+*.tar
+*.rar
+*.7z
+# 大型模型文件
+*.gguf

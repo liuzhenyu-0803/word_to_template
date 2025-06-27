@@ -1,0 +1,51 @@
+# 忽略所有子项目的node_modules
+**/node_modules/
+
+# 忽略所有子项目的.env文件
+**/.env
+
+# 忽略所有层级的dist目录
+dist/
+**/dist/
+
+# 忽略server/document目录及其所有内容
+server/document/
+server/document/*
+
+# 如需保留server/document下的特定内容，可在下方添加例外规则
+# 例如：!server/document/README.md
+
+# 忽略所有层级的document目录，仅保留必要内容（适用于其它子项目）
+document/*
+**/document/*
+!**/document/key_descriptions/
+!**/document/test_documents/
+!**/document/*.docx
+
+# 忽略IDE配置文件
+.vscode/
+.idea/
+
+# 忽略系统文件
+.DS_Store
+Thumbs.db
+
+# 忽略日志文件
+*.log
+
+# 忽略构建目录
+**/build/
+**/coverage/
+**/.next/
+**/.nuxt/
+**/.serverless/
+
+# 忽略包锁文件（保留根目录的即可）
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
+
+# 忽略临时文件
+*.tmp
+*.temp
+*~
