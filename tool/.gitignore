@@ -45,6 +45,8 @@ document/*
 !document/document.docx
 !document/key_descriptions/
 !document/test_documents/
+!document/推荐模型/
+!document/prompt/
 .vscode/
 *.swp
 *.swo

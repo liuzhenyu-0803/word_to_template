@@ -1,4 +1,4 @@
-# 主要依赖
+﻿# 涓昏渚濊禆
 beautifulsoup4==4.13.4
 websockets==15.0.1
 python-docx==1.2.0
