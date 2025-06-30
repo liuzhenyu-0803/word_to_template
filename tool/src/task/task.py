@@ -23,7 +23,6 @@ def startTask(doc_path):
     html_path = os.path.join(doc_dir, "document.html")
     extract_dir = os.path.join(doc_dir, "document_extract")
     key_descriptions_dir = os.path.join(doc_dir, "key_descriptions")
-    replace_dir = os.path.join(doc_dir, "document_replace")
     template_doc_path = os.path.join(doc_dir, "template.docx")
  
     try:
@@ -37,11 +36,12 @@ def startTask(doc_path):
 
         # 步骤3: 替换文档元素
         callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
-        replace_document(extract_dir, key_descriptions_dir, replace_dir)
+        extracted_files = [os.path.join(extract_dir, f) for f in os.listdir(extract_dir) if f.endswith('.html')]
+        replace_document(extracted_files, key_descriptions_dir)
 
         # 步骤4: 生成模板文档
         callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")
-        save_document(doc_path, replace_dir, template_doc_path)
+        save_document(doc_path, extract_dir, template_doc_path)
 
         # 计算总耗时
         total_time = time.time() - start_time

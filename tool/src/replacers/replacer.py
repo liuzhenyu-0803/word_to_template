@@ -5,24 +5,17 @@ Word文档匹配器 - 封装文档元素匹配功能
 from callback.callback import callback_handler
 
 import os
-import shutil
 # 使用绝对导入
 from . import table_replacer # 确保table_matcher被正确导入
 
-def replace_document(extract_files: list[str], key_descriptions_dir: str, replace_dir: str):
+def replace_document(extract_files: list[str], key_descriptions_dir: str):
     """
     对提取的文档元素进行匹配分析
     
     参数:
         extract_files: 要进行语义识别的提取文件列表
         key_descriptions_dir: 关键字描述文件所在目录
-        replace_dir: 替换结果目录路径，用于保存替换结果
     """
-    # 检查并清理输出目录（整体删除再重建，参考extractor）
-    if os.path.exists(replace_dir):
-        shutil.rmtree(replace_dir)
-    os.makedirs(replace_dir)
-
     # 检查文件列表是否为空
     if not extract_files:
         callback_handler.output_callback("错误：提取文件列表为空")
@@ -36,4 +29,4 @@ def replace_document(extract_files: list[str], key_descriptions_dir: str, replac
 
     # 处理表格 - 调用table_replacer模块的replace_tables函数
     if table_files:
-        table_replacer.replace_tables(table_files, table_key_description_path, replace_dir)
+        table_replacer.replace_tables(table_files, table_key_description_path)

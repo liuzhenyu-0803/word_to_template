@@ -33,8 +33,8 @@ def _call_llm_and_parse_json(prompt: str):
         return None
 
 def replace_tables(table_files: list[str],
-                   table_key_description_path: str,
-                   replace_dir: str) -> None:
+                   table_key_description_path: str
+                   ) -> None:
     """
     对提取的表格进行语义匹配分析，并用LLM生成的标签替换内容
     """

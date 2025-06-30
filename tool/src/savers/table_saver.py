@@ -7,7 +7,7 @@ import re
 from bs4 import BeautifulSoup
 from docx.document import Document
 from docx.table import Table
-from global_define.constants import ATTR_CELL_MODIFIED
+from global_define.constants import ATTR_ORIGINAL_CONTENT
 
 def save_tables(doc: Document, table_files: list[str]) -> None:
     """
@@ -38,7 +38,7 @@ def save_tables(doc: Document, table_files: list[str]) -> None:
                 
                 for r, row in enumerate(html_grid):
                     for c, cell in enumerate(row):
-                        if cell and cell.get(ATTR_CELL_MODIFIED) == 'true':
+                        if cell and cell.has_attr(ATTR_ORIGINAL_CONTENT):
                             try:
                                 doc_cell = doc_table.cell(r, c)
                                 doc_cell.text = cell.get_text(strip=True)

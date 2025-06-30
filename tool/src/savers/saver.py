@@ -6,13 +6,13 @@ import os
 from docx import Document
 from savers import table_saver
 
-def save_document(doc_path: str, replace_dir: str, template_doc_path: str) -> None:
+def save_document(doc_path: str, extract_dir: str, template_doc_path: str) -> None:
     """
     将替换后的表格内容保存回新的Word文档
 
     参数:
         doc_path: 原始Word文档路径
-        replace_dir: 包含替换后表格HTML文件的目录
+        extract_dir: 包含提取后(可能已修改)的HTML文件的目录
         template_doc_path: 保存模板化Word文档的路径
     """
     try:
@@ -21,9 +21,9 @@ def save_document(doc_path: str, replace_dir: str, template_doc_path: str) -> No
         # 提取所有替换后的表格HTML文件路径
         import re
         table_files = sorted([
-            os.path.join(replace_dir, f)
-            for f in os.listdir(replace_dir)
-            if re.match(r'^table_\d+\.html$', f) and os.path.isfile(os.path.join(replace_dir, f))
+            os.path.join(extract_dir, f)
+            for f in os.listdir(extract_dir)
+            if re.match(r'^table_\d+\.html$', f) and os.path.isfile(os.path.join(extract_dir, f))
         ])
 
         if table_files:
