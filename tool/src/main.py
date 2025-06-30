@@ -42,16 +42,16 @@ def main():
         extract_document(html_path, extract_dir)
 
         # 步骤3: 替换文档元素
-        # print("\n===== 步骤3: 文档元素替换 =====")
-        # extracted_files = [
-        #     os.path.join(project_dir, "document/document_extract/table_1.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_2.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_3.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_4.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_5.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_6.html"),
-        # ]
-        # replace_document(extracted_files, key_descriptions_dir, replace_dir)
+        callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
+        extracted_files = [
+            os.path.join(project_dir, "document/document_extract/table_1.html"),
+            os.path.join(project_dir, "document/document_extract/table_2.html"),
+            os.path.join(project_dir, "document/document_extract/table_3.html"),
+            os.path.join(project_dir, "document/document_extract/table_4.html"),
+            os.path.join(project_dir, "document/document_extract/table_5.html"),
+            os.path.join(project_dir, "document/document_extract/table_6.html"),
+        ]
+        replace_document(extracted_files, key_descriptions_dir, replace_dir)
         
         # 步骤4: 生成模板文档
         callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")

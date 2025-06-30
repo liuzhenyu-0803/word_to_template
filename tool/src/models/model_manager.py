@@ -16,9 +16,9 @@ class ModelManager:
     """
     
     def __init__(self, 
-                 api_key: str = "LanzOpenAI_020a089e-cba0-4a6f-9957-6c9479980441",
-                 base_url: str = "http://lanz.hikvision.com/v3/openai/deepseek-v3",
-                 model: str = "DeepSeek-V3-0324"):
+                 api_key: str = "1sk-or-v1-37dd84eb11baaebb4da929794ab5e01463b5b797f6738f0c9f4dce1af1862a7c",
+                 base_url: str = "https://openrouter.ai/api/v1",
+                 model: str = "google/gemma-3n-e4b-it"):
         """
         初始化API模型
         
@@ -30,6 +30,11 @@ class ModelManager:
         # 初始化客户端            
         self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
+        # self.model = "google/gemma-3-12b-it"
+        # self.model = "google/gemma-3-12b-it"
+        # self.model = "amazon/nova-lite-v1"
+        # self.model = "google/gemini-2.0-flash-lite-001"
+        self.model = "google/gemini-2.5-flash-lite-preview-06-17"
     
     def create_completion(self, messages: List[Dict[str, str]]):
         """

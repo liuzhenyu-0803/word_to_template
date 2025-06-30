@@ -13,3 +13,6 @@ ATTR_HAS_NESTED_TABLE = 'data-has-nested-table'
 
 # 用于标记表格单元格唯一ID的HTML属性
 ATTR_CELL_ID = 'data-cell-id'
+
+# 用于存储单元格原始内容的HTML属性
+ATTR_ORIGINAL_CONTENT = 'data-original-content'

@@ -1,221 +1,103 @@
-"""
-表格匹配器 - 实现表格内容的语义匹配
-"""
-from callback.callback import callback_handler
-from enum import Enum, auto
-from bs4 import BeautifulSoup
 import os
-from global_define.constants import ATTR_DIAGONAL_SPLIT_TYPE, ATTR_CELL_MODIFIED
+import re
+import json
+from bs4 import BeautifulSoup
 from models.model_manager import llm_manager
+from callback.callback import callback_handler
+from global_define.constants import ATTR_CELL_MODIFIED, ATTR_ORIGINAL_CONTENT
 
-class TableType(Enum):
-    """表格类型枚举"""
-    # 未知类型
-    UNKNOWN = 0
-    # 斜分表格（左上角单元格斜分，首行是列标题，首列是行标题，其余是数据项）
-    # 数据单元格key拼接格式：[数据单元格对应的列标题_数据单元格对应的行标题]
-    Type1 = 1
-    # 单行表格（只有一行，标题、数据、标题、数据...）
-    # 数据单元格key拼接格式：[左侧标题（左侧单元格内容）]
-    Type2 = 2
-    # 矩阵表格（首行是列标题，或首列是行标题，或首行是列标题且首列是行标题，其余是数据项）
-    # 数据单元格key拼接格式：[数据单元格对应的列标题]、[数据单元格对应的行标题]、[数据单元格对应的列标题_数据单元格对应的行标题]
-    Type3 = 3
-
-class TableType3SubType(Enum):
-    """
-    表格类型3的子类型枚举
-    """
-    # 未知子类型
-    UNKNOWN = 0
-    # 列标题
-    Type1 = 1
-    # 行标题
-    Type2 = 2
-    # 列标题+行标题
-    Type3 = 3
-
-def _recognize_table_sub_type(table_file: str) -> TableType:
-    """
-    识别表格子类型
-
-    参数:
-        table_file: 表格文件路径
-
-    返回:
-        TableType: 表格子类型枚举
-    """
-
-    callback_handler.output_callback(f"\n{'-'*30}")
-
-    response = ""
-    for chunk in llm_manager.create_completion_stream(
-                    [{"role": "user", "content": "hi"}]
-                ):
-        callback_handler.output_callback(chunk)
-        response += chunk
-        
-    callback_handler.output_callback(f"\n{'-'*30}")
-
-    # TODO: 实现表格子类型识别逻辑
-    return TableType.UNKNOWN
-
-def _recognize_table_type(table_file: str) -> TableType:
-    """
-    识别表格类型
-    
-    参数:
-        table_file: 表格文件路径
-        
-    返回:
-        TableType: 表格类型枚举
-    """
-    
-    with open(table_file, 'r', encoding='utf-8') as f:
-        soup = BeautifulSoup(f.read(), 'html.parser')
-        table = soup.find('table')
-        
-        # 检查是否有对角线分割属性
-        if table.find('td', attrs={ATTR_DIAGONAL_SPLIT_TYPE: True}):
-            return TableType.Type1
-            
-        # 检查行数是否为1
-        rows = table.find_all('tr')
-        if len(rows) == 1:
-            return TableType.Type2
-            
-        # 默认返回矩阵表格类型
-        return TableType.Type3
-
-
-def _build_grid(table):
-    """
-    将HTML表格（可能包含colspan/rowspan）转换为一个二维列表（网格）。
-    这是处理复杂表格最直接和健壮的方法。
-    """
-    grid = []
-    for r_idx, row in enumerate(table.find_all('tr')):
-        # 确保当前行在网格中存在
-        if len(grid) <= r_idx:
-            grid.append([])
-
-        for cell in row.find_all(['td', 'th']):
-            # 移动到因之前单元格的rowspan而占用的、第一个可用的列位置
-            c_idx = 0
-            while len(grid[r_idx]) > c_idx and grid[r_idx][c_idx] is not None:
-                c_idx += 1
-            
-            rowspan = int(cell.get('rowspan', 1))
-            colspan = int(cell.get('colspan', 1))
-
-            # 将单元格放置在网格中，并根据rowspan/colspan填充
-            for i in range(rowspan):
-                for j in range(colspan):
-                    # 确保目标行存在
-                    if len(grid) <= r_idx + i:
-                        grid.append([])
-                    # 确保目标行有足够的列
-                    while len(grid[r_idx + i]) < c_idx + j:
-                        grid[r_idx + i].append(None)
-                    grid[r_idx + i].insert(c_idx + j, cell)
-    return grid
-
-def _replace_type1_table(table):
-    """处理斜分表格 (Type1)"""
-    # Type1 的逻辑也应该使用网格来确保健壮性，但暂时保持简单
-    rows = table.find_all('tr')
-    for i, row in enumerate(rows):
-        cells = row.find_all('td')
-        for j, cell in enumerate(cells):
-            if i > 0 and j > 0:
-                col_header = rows[i].find_all('td')[0].get_text(strip=True)
-                row_header = rows[0].find_all('td')[j].get_text(strip=True)
-                key = f"{col_header}_{row_header}"
-                cell.string = f"[key_{key}]"
-                cell[ATTR_CELL_MODIFIED] = 'true'
-
-def _replace_type2_table(table):
-    """处理单行表格 (Type2)"""
-    cells = table.find('tr').find_all('td')
-    for i in range(1, len(cells), 2):
-        key = cells[i-1].get_text().strip()
-        cells[i].string = f"[key_{key}]"
-        cells[i][ATTR_CELL_MODIFIED] = 'true'
-
-def _replace_type3_table(table):
-    """处理矩阵表格 (Type3)"""
-    grid = _build_grid(table)
-    if not grid: return
-
-    num_rows = len(grid)
-    num_cols = max(len(r) for r in grid) if num_rows > 0 else 0
-
-    # 假设为有行列标题的矩阵 (Type3SubType.Type3)
-    # TODO: 后续需要结合子类型识别来确定标题和数据区域
-    for r in range(1, num_rows):
-        for c in range(1, num_cols):
-            cell = grid[r][c]
-            
-            if cell:
-                row_header_cell = grid[r][0]
-                col_header_cell = grid[0][c]
-                
-                if row_header_cell and col_header_cell:
-                    row_header = row_header_cell.get_text(strip=True)
-                    col_header = col_header_cell.get_text(strip=True)
-                    
-                    if row_header and col_header:
-                        key = f"{col_header}_{row_header}"
-                        cell.string = f"[key_{key}]"
-                        cell[ATTR_CELL_MODIFIED] = 'true'
-
-def _replace_table(table_file: str, table_type: TableType, replace_dir: str) -> None:
-    """
-    根据表格类型替换表格内容
-    """
+def _call_llm_and_parse_json(prompt: str):
+    """调用LLM并解析返回的JSON数组"""
     try:
-        with open(table_file, 'r', encoding='utf-8') as f:
-            soup = BeautifulSoup(f.read(), 'html.parser')
-            table = soup.find('table')
-
-            if not table:
-                return
-
-            if table_type == TableType.Type1:
-                _replace_type1_table(table)
-            elif table_type == TableType.Type2:
-                _replace_type2_table(table)
-            elif table_type == TableType.Type3:
-                _replace_type3_table(table)
-
-        output_path = os.path.join(replace_dir, os.path.basename(table_file))
-        with open(output_path, 'w', encoding='utf-8') as f:
-            f.write(str(soup))
-
+        messages = [{"role": "user", "content": prompt}]
+        stream = llm_manager.create_completion(messages)
+        response = "".join([chunk for chunk in stream])
+        callback_handler.output_callback(f"LLM输出: {response}")
+        
+        # 优先提取最后一个标准JSON对象数组（[{...}]）
+        obj_array_matches = re.findall(r'(\[\s*\{.*?\}\s*(?:,\s*\{.*?\}\s*)*\])', response, re.DOTALL)
+        if obj_array_matches:
+            json_str = obj_array_matches[-1]
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                # 尝试修复常见的LLM错误（如尾随逗号）
+                cleaned_json_str = re.sub(r',\s*\]', ']', json_str)
+                cleaned_json_str = re.sub(r',\s*\}', '}', cleaned_json_str)
+                return json.loads(cleaned_json_str)
+        
+        callback_handler.output_callback(f"警告：无法从LLM响应中解析出有效的JSON对象数组。")
+        return None
     except Exception as e:
-        callback_handler.output_callback(f"替换表格 '{os.path.basename(table_file)}' 时出错: {e}")
-
+        callback_handler.output_callback(f"调用LLM或解析时出错: {e}")
+        return None
 
 def replace_tables(table_files: list[str],
-                table_key_description_path: str,
-                replace_dir: str) -> None:
+                   table_key_description_path: str,
+                   replace_dir: str) -> None:
     """
-    对提取的表格进行语义匹配分析
-    
-    参数:
-        table_files: 要处理的表格文件列表
-        table_key_description_path: 关键字描述文件路径
-        replace_dir: 替换结果输出目录
-
-    返回:
-        None: 无返回值
+    对提取的表格进行语义匹配分析，并用LLM生成的标签替换内容
     """
+    if not table_files:
+        callback_handler.output_callback("没有需要处理的表格文件。")
+        return
 
-    if not os.path.exists(table_key_description_path):
-        callback_handler.output_callback(f"错误：表格关键字描述文件 {table_key_description_path} 不存在")
-    return
-
-    
     for table_file in table_files:
-        table_type = _recognize_table_type(table_file)
-        _replace_table(table_file, table_type, replace_dir)
+        try:
+            callback_handler.output_callback(f"--- 开始处理表格: {os.path.basename(table_file)} ---")
+            
+            # 1. 读取表格内容
+            with open(table_file, 'r', encoding='utf-8') as f:
+                table_content = f.read()
+
+            # 2. 构造并执行 prompt_1
+            prompt_1 = (
+                "使用COT思考以下任务。\n"
+                "充分理解表格内容，然后提取表格中的key-value关系。\n"
+                "key：用来描述其它单元格中的内容，可由多个标签共同构成。\n"
+                "value：单元格中需要填充或已填充的具体数值或内容。\n"
+                "输出格式：[{\"key\": key, \"value\": value, \"value-cell-id\": value-cell-id}, ...]"
+                f"表格内容：{table_content}\n"
+            )
+            
+            callback_handler.output_callback("步骤 1/2: 提取键值对...")
+            kv_pairs = _call_llm_and_parse_json(prompt_1)
+
+            if not kv_pairs or not isinstance(kv_pairs, list):
+                callback_handler.output_callback(f"警告：未能获取有效的键值对列表，跳过文件 {table_file}")
+                continue
+            
+            callback_handler.output_callback(f"成功提取 {len(kv_pairs)} 个键值对。")
+
+            # 3. 修改表格内容
+            callback_handler.output_callback("步骤 2/2: 更新表格HTML内容...")
+            soup = BeautifulSoup(table_content, 'html.parser')
+            modified_count = 0
+            for item in kv_pairs:
+                if not isinstance(item, dict):
+                    continue
+
+                key = item.get('key')
+                value_cell_id = item.get('value-cell-id')
+
+                if key and value_cell_id:
+                    cell = soup.find(attrs={'data-cell-id': value_cell_id})
+                    if cell:
+                        original_content = cell.string or ""
+                        cell[ATTR_ORIGINAL_CONTENT] = original_content
+                        cell.string = f"{{{key}}}"
+                        cell[ATTR_CELL_MODIFIED] = 'true'
+                        modified_count += 1
+            
+            callback_handler.output_callback(f"已更新 {modified_count} 个单元格。")
+
+            # 4. 写回文件
+            with open(table_file, 'w', encoding='utf-8') as f:
+                f.write(str(soup))
+            
+            callback_handler.output_callback(f"--- 完成处理: {os.path.basename(table_file)} ---\n")
+
+        except Exception as e:
+            callback_handler.output_callback(f"处理文件 {table_file} 时发生严重错误: {e}")
+            import traceback
+            traceback.print_exc()
