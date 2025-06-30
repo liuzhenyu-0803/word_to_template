@@ -1,9 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import LeftPanel from './left_panel/LeftPanel';
-import RightPanel from './right_panel/RightPanel';
+import FileUploadPanel from './file_upload_panel/FileUploadPanel';
+import ProgressPanel from './progress_panel/ProgressPanel';
 import './DocProcess.css';
 
-const DocProcess: React.FC = () => {
+interface DocProcessProps {
+  wsMessages?: string[];
+  isProcessingComplete?: boolean;
+  onShowResult?: () => void;
+}
+
+const DocProcess: React.FC<DocProcessProps> = ({
+  wsMessages = [],
+  isProcessingComplete = false,
+  onShowResult
+}) => {
   const [leftWidth, setLeftWidth] = useState(50); // 左侧面板宽度百分比
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -62,7 +72,10 @@ const DocProcess: React.FC = () => {
         className="doc-process-left" 
         style={{ width: `${leftWidth}%` }}
       >
-        <LeftPanel />
+        <FileUploadPanel
+          isProcessingComplete={isProcessingComplete}
+          onShowResult={onShowResult}
+        />
       </div>
       
       <div 
@@ -76,7 +89,7 @@ const DocProcess: React.FC = () => {
         className="doc-process-right" 
         style={{ width: `${100 - leftWidth}%` }}
       >
-        <RightPanel />
+        <ProgressPanel wsMessages={wsMessages} />
       </div>
     </div>
   );

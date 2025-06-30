@@ -15,17 +15,18 @@ def startTask(doc_path):
     :return: 处理结果状态和耗时
     """
     callback_handler.output_callback(f"===== 开始处理文档: {os.path.basename(doc_path)} =====")
-    start_time = time.time()
     
-    try:
-        # 设置路径
-        doc_dir = os.path.dirname(doc_path)
-        html_path = os.path.join(doc_dir, "document.html")
-        extract_dir = os.path.join(doc_dir, "document_extract")
-        key_descriptions_dir = os.path.join(doc_dir, "key_descriptions")
-        replace_dir = os.path.join(doc_dir, "document_replace")
-        template_doc_path = os.path.join(doc_dir, "template.docx")
+    start_time = time.time()
 
+    # 设置路径
+    doc_dir = os.path.dirname(doc_path)
+    html_path = os.path.join(doc_dir, "document.html")
+    extract_dir = os.path.join(doc_dir, "document_extract")
+    key_descriptions_dir = os.path.join(doc_dir, "key_descriptions")
+    replace_dir = os.path.join(doc_dir, "document_replace")
+    template_doc_path = os.path.join(doc_dir, "template.docx")
+ 
+    try:
         # 步骤1: Word文档转换为HTML
         callback_handler.output_callback("\n===== 步骤1: 文档转换 =====")
         convert_document(doc_path, html_path)
@@ -45,6 +46,10 @@ def startTask(doc_path):
         # 计算总耗时
         total_time = time.time() - start_time
         callback_handler.output_callback(f"\n===== 处理完成，总耗时: {total_time:.2f} 秒 =====")
+
+        # 发送结束回调
+        callback_handler.end_callback(f"")
+        
         return True, total_time
         
     except Exception as e:

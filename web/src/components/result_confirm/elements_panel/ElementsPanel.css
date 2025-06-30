@@ -1,0 +1,123 @@
+.elements-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff;
+}
+
+.elements-panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.elements-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.element-counter {
+  font-size: 14px;
+  color: #6c757d;
+  background-color: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.elements-panel-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.loading-message,
+.error-message,
+.empty-message {
+  text-align: center;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.error-message {
+  color: #dc3545;
+}
+
+.element-viewer {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  gap: 12px;
+}
+
+.nav-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.nav-button:hover:not(:disabled) {
+  background-color: #0056b3;
+  transform: scale(1.1);
+}
+
+.nav-button:disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.element-content {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.element-type {
+  font-size: 14px;
+  font-weight: 600;
+  color: #007bff;
+  margin-bottom: 12px;
+  padding: 4px 8px;
+  background-color: #e7f1ff;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.element-iframe-container {
+  flex: 1;
+  background-color: white;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.element-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}

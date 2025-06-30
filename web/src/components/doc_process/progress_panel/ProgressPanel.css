@@ -1,0 +1,37 @@
+.progress-panel {
+  height: 100%;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.progress-panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.progress-panel-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #495057;
+  font-weight: 600;
+}
+
+.progress-panel-content {
+  flex: 1;
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+.message-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f3f4;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.message-item:last-child {
+  border-bottom: none;
+}

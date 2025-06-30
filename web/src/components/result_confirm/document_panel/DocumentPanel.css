@@ -1,0 +1,44 @@
+.document-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.document-panel-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.document-panel-content {
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.document-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.loading-message,
+.error-message {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.error-message {
+  color: #dc3545;
+}

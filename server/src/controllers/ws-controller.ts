@@ -17,9 +17,9 @@ export const handleConnection = (ws: WebSocket) => {
             } else if (data.type === 1) {
 
             } else if (data.type === 2) {
-                sendMessage("web_client", { type: 2, progressMessage: data.progressMessage });
+                sendMessage("web_client", data);
             } else {
-                
+
             }
         } catch {
             console.log(`WebSocket Received message: ${message}`);

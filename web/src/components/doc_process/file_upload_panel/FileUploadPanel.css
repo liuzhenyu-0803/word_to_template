@@ -1,0 +1,69 @@
+.file-upload-panel {
+  height: 100%;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+}
+
+.upload-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+
+.upload-icon {
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+
+.upload-icon:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
+
+.upload-text {
+  color: #6c757d;
+  font-size: 16px;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 100%;
+  word-break: break-all;
+  padding: 0 10px;
+}
+
+.result-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.review-result-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.review-result-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.review-result-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}

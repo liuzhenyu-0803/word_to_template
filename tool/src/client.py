@@ -53,8 +53,6 @@ async def on_message(msg):
             doc_path = data["docPath"]
             callback_handler.output_callback(f"开始处理文档: {doc_path}")
             startTask(doc_path)
-        else:
-            callback_handler.output_callback("消息格式不符合要求")
     except json.JSONDecodeError:
         callback_handler.output_callback("消息不是有效的JSON格式")
     except Exception as e:

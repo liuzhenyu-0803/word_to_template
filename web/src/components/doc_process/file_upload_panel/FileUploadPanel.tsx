@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
-import './LeftPanel.css';
+import './FileUploadPanel.css';
 
-const LeftPanel: React.FC = () => {
+interface FileUploadPanelProps {
+  isProcessingComplete?: boolean;
+  onShowResult?: () => void;
+}
+
+const FileUploadPanel: React.FC<FileUploadPanelProps> = ({ 
+  isProcessingComplete = false,
+  onShowResult 
+}) => {
   const [fileName, setFileName] = useState<string>('请上传word文档进行处理');
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,7 +52,7 @@ const LeftPanel: React.FC = () => {
   };
 
   return (
-    <div className="left-panel">
+    <div className="file-upload-panel">
       <div className="upload-placeholder">
         <img
           src="/src/assets/file_upload.svg"
@@ -55,9 +63,20 @@ const LeftPanel: React.FC = () => {
           onClick={handleClick}
         />
         <p className="upload-text">{fileName}</p>
+        
+        {isProcessingComplete && (
+          <div className="result-actions">
+            <button 
+              className="review-result-btn"
+              onClick={onShowResult}
+            >
+              审核处理结果
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default LeftPanel;
+export default FileUploadPanel;

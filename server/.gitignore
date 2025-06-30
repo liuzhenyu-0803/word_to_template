@@ -104,3 +104,7 @@ typings/
 # OS
 .DS_Store
 Thumbs.db
+# Build output
+dist/
+# Document files
+document/
