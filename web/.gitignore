@@ -27,7 +27,6 @@ dist-ssr/
 .env.*.local
 
 # Editor
-.vscode/
 .idea/
 *.suo
 *.ntvs*
