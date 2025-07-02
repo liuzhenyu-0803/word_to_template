@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import FileUploadPanel from './file_upload_panel/FileUploadPanel';
 import ProgressPanel from './progress_panel/ProgressPanel';
 import './DocProcess.css';
@@ -10,50 +10,56 @@ interface DocProcessProps {
 }
 
 function DocProcess({ wsMessages = [], isProcessingComplete = false, onShowResult }: DocProcessProps) {
-    const [leftWidth, setLeftWidth] = useState(50); // 左侧面板宽度百分比
+    const [leftWidth, setLeftWidth] = useState(50);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const handleMouseDown = (e: React.MouseEvent) => {
+    // 拖拽处理逻辑
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
         setIsDragging(true);
-    };
+    }, []);
 
-    const handleMouseMove = (e: MouseEvent) => {
-        if (!isDragging || !containerRef.current) return;
+    // 使用 useCallback 缓存事件处理函数
+    const handleMouseMove = useCallback((e: MouseEvent) => {
+        if (!containerRef.current) return;
 
-        // 返回元素相对于视口(viewport)的位置和尺寸
         const containerRect = containerRef.current.getBoundingClientRect();
         const containerWidth = containerRect.width;
         const mouseX = e.clientX - containerRect.left;
-
-        // 计算新的左侧宽度百分比
         const newLeftWidth = (mouseX / containerWidth) * 100;
 
-        // 限制最小和最大宽度
         const minWidth = 20;
         const maxWidth = 80;
         const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newLeftWidth));
 
         setLeftWidth(clampedWidth);
-    };
+    }, []);
 
-    const handleMouseUp = () => {
+    const handleMouseUp = useCallback(() => {
         setIsDragging(false);
-    };
+    }, []);
 
+    // 只在拖拽状态变化时添加/移除事件监听器
     useEffect(() => {
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        if (isDragging) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
 
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDragging]);
+    }, [isDragging, handleMouseMove, handleMouseUp]);
 
+    // 处理拖拽时的全局样式
     useEffect(() => {
-        isDragging ? document.body.style.cursor = 'col-resize' : document.body.style.cursor = '';
+        document.body.style.cursor = isDragging ? 'col-resize' : '';
+
+        return () => {
+            document.body.style.cursor = '';
+        };
     }, [isDragging]);
 
     return (
@@ -83,6 +89,6 @@ function DocProcess({ wsMessages = [], isProcessingComplete = false, onShowResul
             </div>
         </div>
     );
-};
+}
 
 export default DocProcess;

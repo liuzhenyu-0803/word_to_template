@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './DocumentPanel.css';
 
 interface DocumentPanelProps {
-  iframeRef?: React.RefObject<HTMLIFrameElement | null>;
+  iframeRef: (node: HTMLIFrameElement | null) => void;
   onLoad?: () => void;
 }
 

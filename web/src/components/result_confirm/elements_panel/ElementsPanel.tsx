@@ -8,7 +8,7 @@ interface Element {
 }
 
 interface ElementsPanelProps {
-  iframeRef?: React.RefObject<HTMLIFrameElement | null>;
+  iframeRef: (node: HTMLIFrameElement | null) => void;
   onLoad?: () => void;
 }
 
