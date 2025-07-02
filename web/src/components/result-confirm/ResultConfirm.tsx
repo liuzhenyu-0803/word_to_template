@@ -1,7 +1,7 @@
 ﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
 import './ResultConfirm.css';
-import ElementsPanel from './elements_panel/ElementsPanel';
-import DocumentPanel from './document_panel/DocumentPanel';
+import ElementsPanel from './elements-panel/ElementsPanel';
+import DocumentPanel from './document-panel/DocumentPanel';
 import { SyncManager } from './sync-manager';
 
 interface ResultConfirmProps {

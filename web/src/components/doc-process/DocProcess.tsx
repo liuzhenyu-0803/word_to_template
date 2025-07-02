@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import FileUploadPanel from './file_upload_panel/FileUploadPanel';
-import ProgressPanel from './progress_panel/ProgressPanel';
+import FileUploadPanel from './file-upload-panel/FileUploadPanel';
+import ProgressPanel from './progress-panel/ProgressPanel';
 import './DocProcess.css';
 
 interface DocProcessProps {

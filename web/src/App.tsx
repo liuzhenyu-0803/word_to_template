@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import DocProcess from './components/doc_process/DocProcess'
-import ResultConfirm from './components/result_confirm/ResultConfirm'
+import DocProcess from './components/doc-process/DocProcess'
+import ResultConfirm from './components/result-confirm/ResultConfirm'
 
 type AppView = 'doc-process' | 'result-confirm'
 
