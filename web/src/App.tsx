@@ -8,7 +8,7 @@ type AppView = 'doc-process' | 'result-confirm'
 function App() {
   const [currentView, setCurrentView] = useState<AppView>('doc-process')
   const [wsMessages, setWsMessages] = useState<string[]>([])
-  const [isProcessingComplete, setIsProcessingComplete] = useState(false)
+  const [isProcessingComplete, setProcessingComplete] = useState(false)
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:3000')
@@ -22,14 +22,15 @@ function App() {
     }
 
     ws.onmessage = (event) => {
-      // 收集所有消息供RightPanel显示
+      // 函数式更新状态，确保获取到最新的状态
       setWsMessages(prev => [...prev, event.data])
       
+      // 不加try-catch会导致非JSON消息抛出错误，只会中断当前函数，但不影响后续继续接收消息
+      // 但推荐加上try-catch，不会抛出错误，更具有健壮性
       try {
         const data = JSON.parse(event.data)
         if (data.type === 2 && data.isFinished === 1) {
-          // 处理完成，设置完成状态而不是自动跳转
-          setIsProcessingComplete(true)
+          setProcessingComplete(true)
         }
       } catch {
         // 忽略非JSON消息
@@ -44,6 +45,7 @@ function App() {
       console.log('App WebSocket disconnected')
     }
 
+    // 清理函数
     return () => {
       ws.close()
     }
@@ -51,13 +53,15 @@ function App() {
 
   const handleBackToUpload = () => {
     setCurrentView('doc-process')
-    setIsProcessingComplete(false)
+    setProcessingComplete(false)
   }
 
   const handleShowResult = () => {
     setCurrentView('result-confirm')
   }
 
+  // 圆括号：包裹多行，作为单一表达式，单行可省略，但加上可读性更高
+  // 花括号：嵌入js表达式
   return (
     <>
       {currentView === 'doc-process' && (

@@ -5,7 +5,8 @@ interface ProgressPanelProps {
   wsMessages?: string[];
 }
 
-const ProgressPanel: React.FC<ProgressPanelProps> = ({ wsMessages = [] }) => {
+// { wsMessages = [] }：props对象解构+默认值
+function ProgressPanel({ wsMessages = [] }: ProgressPanelProps) {
   const [messages, setMessages] = useState<string[]>([]);
 
   useEffect(() => {
@@ -30,7 +31,7 @@ const ProgressPanel: React.FC<ProgressPanelProps> = ({ wsMessages = [] }) => {
         }
       });
     }
-  }, [wsMessages, messages.length]);
+  }, [wsMessages]);
 
   return (
     <div className="progress-panel">

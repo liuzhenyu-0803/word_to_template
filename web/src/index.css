@@ -1,12 +1,9 @@
-/* 全局重置：清除所有元素的 margin 和 padding，统一盒模型 */
 * {
-    margin: 0; /* 清除所有元素的外边距 */
-    padding: 0; /* 清除所有元素的内边距 */
-    box-sizing: border-box; /* 设置盒模型为border-box，使宽度包含padding和border */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-/* 页面主体布局样式 */
-body {
-    min-height: 100dvh; /* 最小高度为100动态视口高度 */
-    display: flex; /* 启用弹性布局 */
+#root {
+    height: 100dvh;
 }
