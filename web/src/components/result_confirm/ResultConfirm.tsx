@@ -8,9 +8,11 @@ interface ResultConfirmProps {
   onBack: () => void;
 }
 
-const ResultConfirm: React.FC<ResultConfirmProps> = ({ onBack }) => {
-  const [leftWidth, setLeftWidth] = useState(40); // 左侧面板宽度百分比
+function ResultConfirm({ onBack }: ResultConfirmProps) {
+  const [leftWidth, setLeftWidth] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
+  const [isLeftIframeLoaded, setIsLeftIframeLoaded] = useState(false);
+  const [isRightIframeLoaded, setIsRightIframeLoaded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const leftIframeRef = useRef<HTMLIFrameElement>(null);
   const rightIframeRef = useRef<HTMLIFrameElement>(null);
@@ -28,10 +30,8 @@ const ResultConfirm: React.FC<ResultConfirmProps> = ({ onBack }) => {
     const containerWidth = containerRect.width;
     const mouseX = e.clientX - containerRect.left;
     
-    // 计算新的左侧宽度百分比
     const newLeftWidth = (mouseX / containerWidth) * 100;
     
-    // 限制最小和最大宽度
     const minWidth = 20;
     const maxWidth = 60;
     const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newLeftWidth));
@@ -43,26 +43,26 @@ const ResultConfirm: React.FC<ResultConfirmProps> = ({ onBack }) => {
     setIsDragging(false);
   };
 
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    } else {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    }
+    useEffect(() => {
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
 
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isDragging]);
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [isDragging]);
+
+    useEffect(() => {
+        isDragging ? document.body.style.cursor = 'col-resize' : document.body.style.cursor = '';
+
+        if (leftIframeRef.current) {
+            leftIframeRef.current.style.pointerEvents = isDragging ? 'none' : 'auto';
+        }
+        if (rightIframeRef.current) {
+            rightIframeRef.current.style.pointerEvents = isDragging ? 'none' : 'auto';
+        }
+    }, [isDragging]);
 
   // 初始化同步管理器
   useEffect(() => {
@@ -76,21 +76,13 @@ const ResultConfirm: React.FC<ResultConfirmProps> = ({ onBack }) => {
   }, []);
 
   // 设置iframe引用 - 需要监听iframe引用的变化
+  // 只依赖iframe onLoad事件进行同步
   useEffect(() => {
-    const checkAndSetIframes = () => {
-      if (leftIframeRef.current && rightIframeRef.current && syncManagerRef.current) {
-        syncManagerRef.current.setIframes(leftIframeRef.current, rightIframeRef.current);
-      }
-    };
-
-    // 立即检查
-    checkAndSetIframes();
-
-    // 使用定时器延迟检查，确保iframe已经渲染
-    const timer = setTimeout(checkAndSetIframes, 100);
-
-    return () => clearTimeout(timer);
-  }, [leftIframeRef.current, rightIframeRef.current]);
+    if (leftIframeRef.current && rightIframeRef.current &&
+        syncManagerRef.current && isLeftIframeLoaded && isRightIframeLoaded) {
+      syncManagerRef.current.setIframes(leftIframeRef.current, rightIframeRef.current);
+    }
+  }, [isLeftIframeLoaded, isRightIframeLoaded, syncManagerRef.current]);
 
   return (
     <div className={`result-confirm ${isDragging ? 'dragging' : ''}`} ref={containerRef}>
@@ -106,7 +98,10 @@ const ResultConfirm: React.FC<ResultConfirmProps> = ({ onBack }) => {
           className="result-confirm-left"
           style={{ width: `${leftWidth}%` }}
         >
-          <ElementsPanel iframeRef={leftIframeRef} />
+          <ElementsPanel
+            iframeRef={leftIframeRef}
+            onLoad={() => setIsLeftIframeLoaded(true)}
+          />
         </div>
         
         <div
@@ -120,7 +115,10 @@ const ResultConfirm: React.FC<ResultConfirmProps> = ({ onBack }) => {
           className="result-confirm-right"
           style={{ width: `${100 - leftWidth}%` }}
         >
-          <DocumentPanel iframeRef={rightIframeRef} />
+          <DocumentPanel
+            iframeRef={rightIframeRef}
+            onLoad={() => setIsRightIframeLoaded(true)}
+          />
         </div>
       </div>
     </div>

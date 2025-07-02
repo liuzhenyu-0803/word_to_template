@@ -3,9 +3,10 @@ import './DocumentPanel.css';
 
 interface DocumentPanelProps {
   iframeRef?: React.RefObject<HTMLIFrameElement | null>;
+  onLoad?: () => void;
 }
 
-const DocumentPanel: React.FC<DocumentPanelProps> = ({ iframeRef }) => {
+const DocumentPanel: React.FC<DocumentPanelProps> = ({ iframeRef, onLoad }) => {
   const [docUrl, setDocUrl] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +54,7 @@ const DocumentPanel: React.FC<DocumentPanelProps> = ({ iframeRef }) => {
             title="文档预览"
             className="document-iframe"
             allowFullScreen
+            onLoad={onLoad}
           />
         )}
       </div>

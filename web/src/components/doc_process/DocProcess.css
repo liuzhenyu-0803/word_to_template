@@ -7,7 +7,6 @@
     width: 6px;
     background-color: #e9ecef;
     cursor: col-resize;
-    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -9,9 +9,10 @@ interface Element {
 
 interface ElementsPanelProps {
   iframeRef?: React.RefObject<HTMLIFrameElement | null>;
+  onLoad?: () => void;
 }
 
-const ElementsPanel: React.FC<ElementsPanelProps> = ({ iframeRef }) => {
+const ElementsPanel: React.FC<ElementsPanelProps> = ({ iframeRef, onLoad }) => {
   const [elements, setElements] = useState<Element[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -104,6 +105,7 @@ const ElementsPanel: React.FC<ElementsPanelProps> = ({ iframeRef }) => {
                   title={`${currentElement.type} 预览`}
                   className="element-iframe"
                   sandbox="allow-scripts allow-same-origin"
+                  onLoad={onLoad}
                 />
               </div>
             </div>
