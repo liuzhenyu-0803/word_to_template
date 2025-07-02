@@ -43,6 +43,7 @@ export const sendMessage = (clientName: string, message: string | object): boole
     for (const ws of webSockets) {
         if ((ws as any).name === clientName) {
             const msg = typeof message === 'string' ? message : JSON.stringify(message);
+            console.log(`向客户端 ${clientName} 发送消息: ${msg}`);
             ws.send(msg);
             return true;
         }
