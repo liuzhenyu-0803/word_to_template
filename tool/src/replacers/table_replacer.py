@@ -86,7 +86,6 @@ def replace_tables(table_files: list[str],
                         original_content = cell.string or ""
                         cell[ATTR_ORIGINAL_CONTENT] = original_content
                         cell.string = f"{{{key}}}"
-                        cell[ATTR_CELL_MODIFIED] = 'true'
                         modified_count += 1
             
             callback_handler.output_callback(f"已更新 {modified_count} 个单元格。")
