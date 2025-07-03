@@ -19,26 +19,21 @@ body {
 /* 表格整体样式 */
 table {
     border-collapse: collapse; /* 合并相邻单元格边框为单一边框，消除默认的双边框间隙 */
-    width: 80%; /* 宽度占80% */
-    table-layout: fixed; /* 固定表格布局算法：列宽由表格宽度和列宽度决定，内容溢出会被截断 */
 }
 
 /* 表格单元格基础样式 */
 td {
+    min-width: 100px; /* 固定每个单元格宽度100px */
     border: 1px solid #ddd; /* 1px灰色边框 */
     text-align: left; /* 文字左对齐 */
     position: relative; /* 为子元素绝对定位建立参照 */
-    height: 40px; /* 固定行高40px */
     padding: 0 10px; /* 左右内边距10px */
-    user-select: none;
     -webkit-user-select: none;
-    -moz-user-select: none;
 }
 
 /* 单元格内容与控件的 flex 容器 */
 .cell-flex-row {
     display: flex;
-    flex-direction: row;
     align-items: center; /* 垂直居中按钮内容 */
     gap: 5px;
 }
@@ -46,21 +41,24 @@ td {
 .cell-content {
     flex: 1; /* 占据剩余空间 */
     min-width: 0; /* 防止内容溢出时撑开单元格 */
+    word-break: break-all; /* 长单词/长字符串自动换行 */
+    white-space: pre-wrap; /* 保留换行并自动换行 */
+    overflow-wrap: break-word; /* 兼容性换行 */
 }
 
 /* 单元格内输入框样式 */
-td input {
+td textarea {
     flex: 1; /* 占据剩余空间 */
     min-width: 0; /* 防止内容溢出时撑开单元格 */
-    border: none;
+    border: none; /* 1px浅灰色边框 */
     outline: none;
     font-family: inherit; /* 继承父元素字体 */
     font-size: inherit; /* 继承父元素字号 */
+    resize: none; /* 禁止textarea任何方向调整大小 */
 }
 
 /* 控制按钮容器（编辑/下拉/撤销） */
 .controls {
-    position: relative; /* 相对定位 */
     display: flex; /* 显示控制按钮 */  
     gap: 5px; /* 按钮间距 */
     align-items: center; /* 垂直居中按钮内容 */
@@ -175,36 +173,49 @@ export const TABLE_JS = `
 
             // 双击单元格：进入编辑模式
             cell.addEventListener('dblclick', (e) => {
-                if (flexDiv.querySelector('input')) return; // 已有输入框则忽略
+                if (flexDiv.querySelector('textarea')) return; // 已有编辑框则忽略
 
-                // 创建输入框
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = contentSpan.textContent;
+                // 创建多行文本编辑框
+                const textarea = document.createElement('textarea');
+                textarea.value = contentSpan.textContent;
 
-                // 隐藏内容区，插入输入框
+                // 设置textarea宽度与cell-content一致
+                textarea.style.width = contentSpan.offsetWidth + 'px';
+
+                // 隐藏内容区，插入编辑框
                 contentSpan.style.display = 'none';
-                flexDiv.insertBefore(input, controls);
-                input.focus();
+                flexDiv.insertBefore(textarea, controls);
+                textarea.focus();
+
+                // 自动调整高度以适应内容
+                const adjustHeight = () => {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+                };
+                adjustHeight();
 
                 // 结束编辑（保存/取消）
                 const finishEditing = (saveChanges) => {
-                    if (!flexDiv.contains(input)) return;
+                    if (!flexDiv.contains(textarea)) return;
                     if (saveChanges) {
-                        contentSpan.innerHTML = input.value;
+                        // 保留换行符，使用innerHTML显示
+                        contentSpan.innerHTML = textarea.value.replace(/\\n/g, '<br>');
                     }
-                    flexDiv.removeChild(input);
+                    flexDiv.removeChild(textarea);
                     contentSpan.style.display = '';
                 };
 
                 // 失焦或按键事件
-                input.addEventListener('blur', () => finishEditing(true));
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        finishEditing(true);
-                    } else if (e.key === 'Escape') {
+                textarea.addEventListener('blur', () => finishEditing(true));
+                textarea.addEventListener('input', adjustHeight); // 内容变化时调整高度
+                textarea.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
                         finishEditing(false);
+                    } else if (e.key === 'Enter' && e.ctrlKey) {
+                        // Ctrl+Enter 保存并退出编辑
+                        finishEditing(true);
                     }
+                    // 普通Enter键允许换行
                 });
             });
 
@@ -250,7 +261,7 @@ export const TABLE_JS = `
 })();`;
 
 export const generateTableHTML = (content: string): string => {
-  return `
+    return `
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
