@@ -15,7 +15,9 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    cb(null, file.originalname);
+    // 修正 multer 默认的 latin1 编码问题，将其转为 utf8
+    const decodedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    cb(null, decodedName);
   }
 });
 
