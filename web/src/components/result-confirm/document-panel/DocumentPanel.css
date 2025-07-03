@@ -5,13 +5,16 @@
 }
 
 .document-panel-header {
-  padding: 12px 16px;
+  height: 50px;
+  padding: 0 20px;
   border-bottom: 1px solid #e9ecef;
   background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .document-panel-header h3 {
-  margin: 0;
   font-size: 16px;
   color: #495057;
   font-weight: 500;
@@ -19,8 +22,7 @@
 
 .document-panel-content {
   flex: 1;
-  padding: 0;
-  overflow: hidden;
+  min-height: 0;
   display: flex;
   justify-content: center;
   align-items: center;
