@@ -11,6 +11,7 @@ interface ResultConfirmProps {
 function ResultConfirm({ onBack }: ResultConfirmProps) {
     const [leftWidth, setLeftWidth] = useState(50);
     const [isDragging, setIsDragging] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const syncManagerRef = useRef<SyncManager>(null);
     
@@ -110,13 +111,64 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         }
     }, [trySetSyncManager]);
 
+    // 保存功能
+    const handleSave = useCallback(async () => {
+        if (!rightIframeRef.current) {
+            console.error('右侧iframe未找到');
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            
+            // 获取右侧iframe的HTML内容
+            const rightDoc = rightIframeRef.current.contentDocument;
+            if (!rightDoc) {
+                throw new Error('无法获取右侧iframe内容');
+            }
+            
+            const htmlContent = rightDoc.documentElement.outerHTML;
+            
+            // 发送到后端
+            const response = await fetch('http://localhost:3000/document_html', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/html',
+                },
+                body: htmlContent
+            });
+
+            if (!response.ok) {
+                throw new Error(`保存失败: ${response.status}`);
+            }
+
+            console.log('保存成功');
+            // 这里可以添加成功提示
+            
+        } catch (error) {
+            console.error('保存失败:', error);
+            // 这里可以添加错误提示
+        } finally {
+            setIsSaving(false);
+        }
+    }, []);
+
     return (
         <div className={`result-confirm ${isDragging ? 'dragging' : ''}`} ref={containerRef}>
             <div className="result-confirm-header">
                 <h2>处理完成</h2>
-                <button className="back-button" onClick={onBack}>
-                    返回上传
-                </button>
+                <div className="header-buttons">
+                    <button className="back-button" onClick={onBack}>
+                        返回上传
+                    </button>
+                    <button
+                        className="save-button"
+                        onClick={handleSave}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? '保存中...' : '保存'}
+                    </button>
+                </div>
             </div>
 
             <div className="result-confirm-split-container">

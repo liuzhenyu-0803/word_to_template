@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from global_define.constants import ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_CELL_ID
 
 
-def extract_tables(html_file_path: str, output_dir: str) -> None:
+async def extract_tables(html_file_path: str, output_dir: str) -> None:
     """从HTML文件中提取所有表格，每个表格保存为独立HTML文件"""
     try:
         try:
@@ -19,10 +19,10 @@ def extract_tables(html_file_path: str, output_dir: str) -> None:
             with open(html_file_path, 'r', encoding='gbk') as file:
                 html_content = file.read()
         
-        table_html_strings = get_tables_from_html(html_content)
+        table_html_strings = await get_tables_from_html(html_content)
         
         if not table_html_strings:
-            callback_handler.output_callback("未找到任何表格")
+            await callback_handler.output_callback("未找到任何表格")
             return
         
         for i, table_html in enumerate(table_html_strings):
@@ -30,14 +30,14 @@ def extract_tables(html_file_path: str, output_dir: str) -> None:
             output_file = os.path.join(output_dir, f"table_{table_count}.html")
             with open(output_file, 'w', encoding='utf-8') as file:
                 file.write(table_html)
-            callback_handler.output_callback(f"表格 {table_count} 已保存")
+            await callback_handler.output_callback(f"表格 {table_count} 已保存")
         
-        callback_handler.output_callback(f"总共保存了 {len(table_html_strings)} 个表格")
+        await callback_handler.output_callback(f"总共保存了 {len(table_html_strings)} 个表格")
     except Exception as e:
-        callback_handler.output_callback(f"表格提取失败: {e}")
+        await callback_handler.output_callback(f"表格提取失败: {e}")
 
 
-def get_tables_from_html(html_content: str) -> list[str]:
+async def get_tables_from_html(html_content: str) -> list[str]:
     """
     从HTML字符串中提取表格，返回表格HTML字符串列表
     
@@ -52,7 +52,7 @@ def get_tables_from_html(html_content: str) -> list[str]:
         html_tables = soup.find_all('table', recursive=True)
 
         if not html_tables:
-            callback_handler.output_callback("未找到任何表格")
+            await callback_handler.output_callback("未找到任何表格")
             return []
         
         table_html_strings = []
@@ -61,11 +61,11 @@ def get_tables_from_html(html_content: str) -> list[str]:
             if clean_html_table:
                 table_html_strings.append(str(clean_html_table))
         
-        callback_handler.output_callback(f"总共处理了 {len(html_tables)} 个表格，提取了 {len(table_html_strings)} 个表格")
+        await callback_handler.output_callback(f"总共处理了 {len(html_tables)} 个表格，提取了 {len(table_html_strings)} 个表格")
         return table_html_strings
             
     except Exception as e:
-        callback_handler.output_callback(f"表格提取失败: {e}")
+        await callback_handler.output_callback(f"表格提取失败: {e}")
         return []
     
 

@@ -6,7 +6,7 @@ import os
 from docx import Document
 from savers import table_saver
 
-def save_document(doc_path: str, extract_dir: str, template_doc_path: str) -> None:
+async def save_document(doc_path: str, extract_dir: str, template_doc_path: str) -> None:
     """
     将替换后的表格内容保存回新的Word文档
 
@@ -27,14 +27,14 @@ def save_document(doc_path: str, extract_dir: str, template_doc_path: str) -> No
         ])
 
         if table_files:
-            table_saver.save_tables(doc, table_files)
+            await table_saver.save_tables(doc, table_files)
         
         # 确保目标目录存在
         os.makedirs(os.path.dirname(template_doc_path), exist_ok=True)
         
         # 保存为新文档
         doc.save(template_doc_path)
-        callback_handler.output_callback(f"模板文件已成功保存至: {template_doc_path}")
+        await callback_handler.output_callback(f"模板文件已成功保存至: {template_doc_path}")
 
     except Exception as e:
-        callback_handler.output_callback(f"保存文档时出错: {e}")
+        await callback_handler.output_callback(f"保存文档时出错: {e}")

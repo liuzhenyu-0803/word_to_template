@@ -22,8 +22,11 @@ function FileUploadPanel({
                 const formData = new FormData();
                 formData.append('file', file);
 
-                const response = await fetch('http://localhost:3000/upload', {
+                const response = await fetch('http://localhost:3000/document', {
                     method: 'POST',
+                    headers: {
+                        'Accept-Charset': 'utf-8'
+                    },
                     body: formData
                 });
 

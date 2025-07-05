@@ -9,7 +9,7 @@ from docx.document import Document
 from docx.table import Table
 from global_define.constants import ATTR_ORIGINAL_CONTENT
 
-def save_tables(doc: Document, table_files: list[str]) -> None:
+async def save_tables(doc: Document, table_files: list[str]) -> None:
     """
     将HTML表格中的内容更新到Word文档对象中对应的表格。
     此实现通过构建逻辑网格来正确处理合并单元格，并正确处理嵌套表格。
@@ -44,10 +44,10 @@ def save_tables(doc: Document, table_files: list[str]) -> None:
                                 doc_cell.text = cell.get_text(strip=True)
 
                             except IndexError:
-                                callback_handler.output_callback(f"警告: 表格 {table_index + 1} 的坐标 ({r}, {c}) 超出范围。")
+                                await callback_handler.output_callback(f"警告: 表格 {table_index + 1} 的坐标 ({r}, {c}) 超出范围。")
 
     except Exception as e:
-        callback_handler.output_callback(f"保存表格时出错: {e}")
+        await callback_handler.output_callback(f"保存表格时出错: {e}")
 
 def _collect_all_tables_dfs(doc: Document) -> list[Table]:
     """

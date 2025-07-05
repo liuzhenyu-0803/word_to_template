@@ -20,7 +20,7 @@ function ElementsPanel({ iframeRef }: ElementsPanelProps) {
     useEffect(() => {
         const fetchElements = async () => {
             try {
-                const response = await fetch('http://localhost:3000/elements');
+                const response = await fetch('http://localhost:3000/elements_htmls');
                 if (!response.ok) {
                     throw new Error('获取元素失败');
                 }

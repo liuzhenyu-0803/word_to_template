@@ -8,7 +8,7 @@ import os
 # 使用绝对导入
 from . import table_replacer # 确保table_matcher被正确导入
 
-def replace_document(extract_files: list[str], key_descriptions_dir: str):
+async def replace_document(extract_files: list[str], key_descriptions_dir: str):
     """
     对提取的文档元素进行匹配分析
     
@@ -18,7 +18,7 @@ def replace_document(extract_files: list[str], key_descriptions_dir: str):
     """
     # 检查文件列表是否为空
     if not extract_files:
-        callback_handler.output_callback("错误：提取文件列表为空")
+        await callback_handler.output_callback("错误：提取文件列表为空")
         return
     
     # 筛选出表格文件进行处理 (假设表格文件以 'table_' 开头并以 '.html' 结尾)
@@ -29,4 +29,4 @@ def replace_document(extract_files: list[str], key_descriptions_dir: str):
 
     # 处理表格 - 调用table_replacer模块的replace_tables函数
     if table_files:
-        table_replacer.replace_tables(table_files, table_key_description_path)
+        await table_replacer.replace_tables(table_files, table_key_description_path)

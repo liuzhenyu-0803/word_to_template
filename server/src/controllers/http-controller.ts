@@ -1,154 +1,177 @@
-import http from 'http';
-import { setCorsHeaders } from '../utils/cors';
+import { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { sendMessage } from './ws-controller';
+import { sendMessage } from './websocket-controller';
+import { WS_MESSAGE_TYPE, CLIENT_NAME } from '../config/constants';
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../document');
-    // 确保目录存在
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+export const handleGetRequest = async (req: Request, res: Response) => {
+    console.log('GET请求url:', req.url);
+    try {
+        if (req.url === '/document_html') {
+            const filePath = path.join(__dirname, '../../document/document.html');
+            try {
+                const data = await fs.promises.readFile(filePath, 'utf8');
+                res.setHeader('Content-Type', 'text/html');
+                res.send(data);
+            } catch (err) {
+                console.error(`Error reading document: ${filePath}`, err);
+                res.status(500).json({ error: `无法读取文档: ${filePath}` });
+            }
+        } else if (req.url === '/elements_htmls') {
+            const dirPath = path.join(__dirname, '../../document/document_extract');
+            if (!fs.existsSync(dirPath)) {
+                console.error('Directory does not exist:', dirPath);
+                res.status(404).json({ error: `目录不存在: ${dirPath}` });
+                return;
+            }
+            try {
+                const files = await fs.promises.readdir(dirPath);
+                interface DocumentElement {
+                    type: string;
+                    content: string;
+                }
+                const elements: DocumentElement[] = [];
+                for (const file of files) {
+                    if (file.startsWith('table_')) {
+                        const filePath = path.join(dirPath, file);
+                        try {
+                            const data = await fs.promises.readFile(filePath, 'utf8');
+                            elements.push({
+                                type: "table",
+                                content: data
+                            });
+                        } catch (err) {
+                            console.error(`Error reading file: ${filePath}`, err);
+                        }
+                    }
+                }
+                res.json(elements);
+            } catch (err) {
+                console.error(`Error reading directory: ${dirPath}`, err);
+                res.status(500).json({ error: `无法读取目录: ${dirPath}` });
+            }
+        } else if (req.url === '/template') {
+            const filePath = path.join(__dirname, '../../document/template.docx');
+            try {
+                const data = await fs.promises.readFile(filePath);
+                res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                res.send(data);
+            } catch (err) {
+                console.error(`Error reading template: ${filePath}`, err);
+                res.status(500).json({ error: `无法读取模板文件: ${filePath}` });
+            }
+        } else {
+            res.json({ message: "成功" });
+        }
+    } catch (error) {
+        res.status(500).json({ error: '服务器内部错误' });
     }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // 修正 multer 默认的 latin1 编码问题，将其转为 utf8
-    const decodedName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    cb(null, decodedName);
-  }
+};
+
+const document_storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, '../../document');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, 'document.docx');
+    }
 });
 
-const upload = multer({ storage });
+const document_multer = multer({ storage: document_storage });
 
-export const handleOptionsRequest = (req: http.IncomingMessage, res: http.ServerResponse) => {
-  setCorsHeaders(res);
-  res.writeHead(204);
-  res.end();
-};
-
-interface Element {
-  type: string;
-  content: string;
-}
-
-export const handleGetRequest = (req: http.IncomingMessage, res: http.ServerResponse) => {
-  console.log('GET请求url:', req.url);
-  
-  if (req.url === '/document') {
-    const filePath = path.join(__dirname, '../../document/document.html');
-    fs.readFile(filePath, 'utf8', (err, data) => {
-      if (err) {
-        console.error('Error reading document:', err);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: '无法读取文档' }));
-        return;
-      }
-      setCorsHeaders(res);
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(data);
-    });
-  } else if (req.url === '/elements') {
-    const dirPath = path.join(__dirname, '../../document/document_extract');
-    
-    // 首先检查目录是否存在
-    if (!fs.existsSync(dirPath)) {
-      console.error('Directory does not exist:', dirPath);
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: '目录不存在' }));
-      return;
-    }
-
-    fs.readdir(dirPath, (err, files) => {
-      if (err) {
-        console.error('Error reading directory:', err);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: '无法读取目录' }));
-        return;
-      }
-
-      const elements: Element[] = [];
-      
-      // 使用async IIFE按顺序处理文件
-      (async () => {
-        try {
-          for (const file of files) {
-            if (file.startsWith('table_')) {
-              const filePath = path.join(dirPath, file);
-              try {
-                const data = await fs.promises.readFile(filePath, 'utf8');
-                elements.push({
-                  type: "table",
-                  content: data
-                });
-              } catch (err) {
-                console.error('Error reading file:', file, err);
-              }
-            }
-          }
-          
-          setCorsHeaders(res);
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(elements));
-        } catch (error) {
-          console.error('Error processing files:', error);
-          res.writeHead(500, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: '文件处理错误' }));
+export const handleDocumentPost = [
+    document_multer.single('file'),
+    (req: Request, res: Response) => {
+        if (!req.file) {
+            res.status(400).json({ error: '没有上传文件' });
+            return;
         }
-      })();
-    });
-  } else {
-    setCorsHeaders(res);
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ message: "成功" }));
-  }
-};
 
-export const handleFileUpload = (req: http.IncomingMessage, res: http.ServerResponse) => {
-  console.log('处理上传请求');
-  
-  // 创建multer中间件处理原生HTTP请求
-  const multerMiddleware = upload.single('file');
-  const fakeReq = Object.assign(req, {
-    body: {},
-    files: []
-  });
-  
-  multerMiddleware(fakeReq as any, res as any, (err) => {
-    if (err) {
-      console.error('Upload error:', err);
-      res.writeHead(500, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: err.message }));
-    } else {
-      console.log('File uploaded:', (req as any).file);
+        console.log('文档上传成功:', req.file);
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        message: 'File uploaded successfully',
-        file: (req as any).file
-      }));
-
-      // 通知WebSocket客户端
-      sendMessage('tool_client', {
-        type: 1,
-        docPath: (req as any).file.path
-      });
+        res.json({
+            message: 'File uploaded successfully',
+            file: req.file
+        });
+    
+        sendMessage(CLIENT_NAME.TOOL_CLIENT, {
+            type: WS_MESSAGE_TYPE.DOC_PROCESS_START,
+            docPath: req.file.path
+        });
     }
-  });
+];
+
+export const handleDocumentHtmlPost = async (req: Request, res: Response) => {
+    console.log('POST请求 /document_html');
+
+    const filePath = path.join(__dirname, '../../document/document.html');
+    let htmlContent = '';
+    
+    htmlContent = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+
+    try {
+        await fs.promises.writeFile(filePath, htmlContent, 'utf8');
+        console.log('Document HTML saved successfully');
+        res.json({
+            message: '文档HTML保存成功',
+            filePath: filePath,
+            contentLength: htmlContent.length
+        });
+        
+        sendMessage(CLIENT_NAME.TOOL_CLIENT, {
+            type: WS_MESSAGE_TYPE.DOC_SAVE_START,
+            htmlPath: filePath
+        });
+    } catch (err) {
+        console.error('Error writing document:', err);
+        res.status(500).json({ error: '无法写入文档' });
+    }
 };
 
-export const handlePostRequest = (req: http.IncomingMessage, res: http.ServerResponse) => {
-  let body = '';
-  req.on('data', chunk => {
-    body += chunk.toString();
-  });
-  req.on('end', () => {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      message: 'Received POST data',
-      data: body
-    }));
-  });
+const template_storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const uploadDir = path.join(__dirname, '../../document');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, 'template.docx');
+    }
+});
+
+const template_multer = multer({ storage: template_storage });
+
+export const handleTemplatePost = [
+    template_multer.single('file'),
+    (req: Request, res: Response) => {
+        if (!req.file) {
+            res.status(400).json({ error: '没有上传文件' });
+            return;
+        }
+
+        console.log('模板上传成功:', req.file);
+
+        res.json({
+            message: 'Template uploaded successfully',
+            file: req.file
+        });
+        
+        sendMessage(CLIENT_NAME.WEB_CLIENT, {
+            type: WS_MESSAGE_TYPE.DOC_SAVE_COMPLETE
+        });
+    }
+];
+
+export const handlePostRequest = (req: Request, res: Response) => {
+    res.json({
+        message: 'Received POST data',
+        data: req.body
+    });
 };

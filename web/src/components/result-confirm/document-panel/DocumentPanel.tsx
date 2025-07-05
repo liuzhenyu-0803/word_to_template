@@ -13,7 +13,7 @@ function DocumentPanel({ iframeRef }: DocumentPanelProps) {
     useEffect(() => {
         const fetchDocument = async () => {
             try {
-                const response = await fetch('http://localhost:3000/document');
+                const response = await fetch('http://localhost:3000/document_html');
                 if (!response.ok) {
                     throw new Error('获取文档失败');
                 }

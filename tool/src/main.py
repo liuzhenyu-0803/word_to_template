@@ -12,11 +12,13 @@ from replacers.replacer import replace_document
 from savers.saver import save_document
 from callback.callback import callback_handler
 
-def main():
+import asyncio
+
+async def main():
     """
     主流程：按照LLM初始化 → 转换 → 提取 → 匹配 → 替换的顺序执行
     """
-    callback_handler.output_callback("===== Word文档智能模板生成系统 =====")
+    await callback_handler.output_callback("===== Word文档智能模板生成系统 =====")
     
     # 记录开始时间
     start_time = time.time()
@@ -33,38 +35,40 @@ def main():
     
     try:
         # 步骤1: Word文档转换为HTML
-        callback_handler.output_callback("\n===== 步骤1: 文档转换 =====")
-        convert_document(doc_path, html_path)
+        await callback_handler.output_callback("\n===== 步骤1: 文档转换 =====")
+        await convert_document(doc_path, html_path)
 
         # 步骤2: 提取文档元素
-        callback_handler.output_callback("\n===== 步骤2: 文档元素提取 =====")
-        extract_document(html_path, extract_dir)
+        await callback_handler.output_callback("\n===== 步骤2: 文档元素提取 =====")
+        await extract_document(html_path, extract_dir)
 
-        # 步骤3: 替换文档元素
-        callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
-        extracted_files = [
-            os.path.join(project_dir, "document/document_extract/table_1.html"),
-            os.path.join(project_dir, "document/document_extract/table_2.html"),
-            os.path.join(project_dir, "document/document_extract/table_3.html"),
-            os.path.join(project_dir, "document/document_extract/table_4.html"),
-            os.path.join(project_dir, "document/document_extract/table_5.html"),
-            os.path.join(project_dir, "document/document_extract/table_6.html"),
-        ]
-        replace_document(extracted_files, key_descriptions_dir)
+        # # 步骤3: 替换文档元素
+        # await callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
+        # extracted_files = [
+        #     os.path.join(project_dir, "document/document_extract/table_1.html"),
+        #     os.path.join(project_dir, "document/document_extract/table_2.html"),
+        #     os.path.join(project_dir, "document/document_extract/table_3.html"),
+        #     os.path.join(project_dir, "document/document_extract/table_4.html"),
+        #     os.path.join(project_dir, "document/document_extract/table_5.html"),
+        #     os.path.join(project_dir, "document/document_extract/table_6.html"),
+        # ]
+        # await replace_document(extracted_files, key_descriptions_dir)
         
-        # 步骤4: 生成模板文档
-        callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")
-        save_document(doc_path, extract_dir, template_doc_path)
+        # # 步骤4: 生成模板文档
+        # await callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")
+        # await save_document(doc_path, extract_dir, template_doc_path)
 
-        # 计算总耗时
-        total_time = time.time() - start_time
-        callback_handler.output_callback(f"\n===== 处理完成，总耗时: {total_time:.2f} 秒 =====")
+        # # 计算总耗时
+        # total_time = time.time() - start_time
+        # await callback_handler.output_callback(f"\n===== 处理完成，总耗时: {total_time:.2f} 秒 =====")
         
     except Exception as e:
-        callback_handler.output_callback(f"处理过程中发生错误: {e}")
+        await callback_handler.output_callback(f"处理过程中发生错误: {e}")
         import traceback
         traceback.print_exc()
 
 # 直接运行时的入口点  
 if __name__ == "__main__":
-    main()
+    # 启动异步事件循环并运行main()协程，方式与client.py一致
+    import asyncio
+    asyncio.run(main())

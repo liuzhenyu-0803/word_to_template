@@ -6,13 +6,13 @@ from models.model_manager import llm_manager
 from callback.callback import callback_handler
 from global_define.constants import ATTR_CELL_MODIFIED, ATTR_ORIGINAL_CONTENT
 
-def _call_llm_and_parse_json(prompt: str):
+async def _call_llm_and_parse_json(prompt: str):
     """调用LLM并解析返回的JSON数组"""
     try:
         messages = [{"role": "user", "content": prompt}]
         stream = llm_manager.create_completion(messages)
         response = "".join([chunk for chunk in stream])
-        callback_handler.output_callback(f"LLM输出: {response}")
+        await callback_handler.output_callback(f"LLM输出: {response}")
         
         # 优先提取最后一个标准JSON对象数组（[{...}]）
         obj_array_matches = re.findall(r'(\[\s*\{.*?\}\s*(?:,\s*\{.*?\}\s*)*\])', response, re.DOTALL)
@@ -26,25 +26,25 @@ def _call_llm_and_parse_json(prompt: str):
                 cleaned_json_str = re.sub(r',\s*\}', '}', cleaned_json_str)
                 return json.loads(cleaned_json_str)
         
-        callback_handler.output_callback(f"警告：无法从LLM响应中解析出有效的JSON对象数组。")
+        await callback_handler.output_callback(f"警告：无法从LLM响应中解析出有效的JSON对象数组。")
         return None
     except Exception as e:
-        callback_handler.output_callback(f"调用LLM或解析时出错: {e}")
+        await callback_handler.output_callback(f"调用LLM或解析时出错: {e}")
         return None
 
-def replace_tables(table_files: list[str],
+async def replace_tables(table_files: list[str],
                    table_key_description_path: str
                    ) -> None:
     """
     对提取的表格进行语义匹配分析，并用LLM生成的标签替换内容
     """
     if not table_files:
-        callback_handler.output_callback("没有需要处理的表格文件。")
+        await callback_handler.output_callback("没有需要处理的表格文件。")
         return
 
     for table_file in table_files:
         try:
-            callback_handler.output_callback(f"--- 开始处理表格: {os.path.basename(table_file)} ---")
+            await callback_handler.output_callback(f"--- 开始处理表格: {os.path.basename(table_file)} ---")
             
             # 1. 读取表格内容
             with open(table_file, 'r', encoding='utf-8') as f:
@@ -60,17 +60,17 @@ def replace_tables(table_files: list[str],
                 f"表格内容：{table_content}\n"
             )
             
-            callback_handler.output_callback("步骤 1/2: 提取键值对...")
-            kv_pairs = _call_llm_and_parse_json(prompt_1)
+            await callback_handler.output_callback("步骤 1/2: 提取键值对...")
+            kv_pairs = await _call_llm_and_parse_json(prompt_1)
 
             if not kv_pairs or not isinstance(kv_pairs, list):
-                callback_handler.output_callback(f"警告：未能获取有效的键值对列表，跳过文件 {table_file}")
+                await callback_handler.output_callback(f"警告：未能获取有效的键值对列表，跳过文件 {table_file}")
                 continue
             
-            callback_handler.output_callback(f"成功提取 {len(kv_pairs)} 个键值对。")
+            await callback_handler.output_callback(f"成功提取 {len(kv_pairs)} 个键值对。")
 
             # 3. 修改表格内容
-            callback_handler.output_callback("步骤 2/2: 更新表格HTML内容...")
+            await callback_handler.output_callback("步骤 2/2: 更新表格HTML内容...")
             soup = BeautifulSoup(table_content, 'html.parser')
             modified_count = 0
             for item in kv_pairs:
@@ -88,15 +88,15 @@ def replace_tables(table_files: list[str],
                         cell.string = f"{{{key}}}"
                         modified_count += 1
             
-            callback_handler.output_callback(f"已更新 {modified_count} 个单元格。")
+            await callback_handler.output_callback(f"已更新 {modified_count} 个单元格。")
 
             # 4. 写回文件
             with open(table_file, 'w', encoding='utf-8') as f:
                 f.write(str(soup))
             
-            callback_handler.output_callback(f"--- 完成处理: {os.path.basename(table_file)} ---\n")
+            await callback_handler.output_callback(f"--- 完成处理: {os.path.basename(table_file)} ---\n")
 
         except Exception as e:
-            callback_handler.output_callback(f"处理文件 {table_file} 时发生严重错误: {e}")
+            await callback_handler.output_callback(f"处理文件 {table_file} 时发生严重错误: {e}")
             import traceback
             traceback.print_exc()

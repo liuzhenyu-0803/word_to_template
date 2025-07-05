@@ -11,15 +11,15 @@ import tempfile
 from global_define.constants import ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_CELL_ID
 
 
-def convert_document(word_file, html_file):
+async def convert_document(word_file, html_file):
     """使用PyDocX库将Word文件完整转换为HTML并添加标记"""
     try:
         html_content = get_html_from_document(word_file)
         with open(html_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        callback_handler.output_callback(f"成功导出: {html_file}")
+        await callback_handler.output_callback(f"成功导出: {html_file}")
     except Exception as e:
-        callback_handler.output_callback(f"导出失败: {e}")
+        await callback_handler.output_callback(f"导出失败: {e}")
 
 
 def get_html_from_document(word_file):
@@ -48,7 +48,7 @@ def _mark_cells(html_content, doc_path):
             for row_idx, row in enumerate(html_table.find_all('tr')):
                 for cell_idx, cell in enumerate(row.find_all(['td', 'th'])):
                     # 设置唯一ID
-                    cell[ATTR_CELL_ID] = f"table{table_idx}_cell{row_idx}_{cell_idx}"
+                    cell[ATTR_CELL_ID] = f"table_{table_idx}_cell_{row_idx}_{cell_idx}"
                     
                     # 检查斜线
                     if row_idx == 0 and cell_idx == 0 and xml_table:

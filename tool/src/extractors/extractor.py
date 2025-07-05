@@ -9,7 +9,7 @@ import zipfile
 from . import table_extractor
 
 
-def extract_document(html_path: str, extract_dir: str):
+async def extract_document(html_path: str, extract_dir: str):
     """
     从HTML文件提取所有内容元素
     
@@ -23,4 +23,4 @@ def extract_document(html_path: str, extract_dir: str):
     os.makedirs(extract_dir)
     
     # 处理表格
-    table_extractor.extract_tables(html_path, extract_dir)
+    await table_extractor.extract_tables(html_path, extract_dir)
