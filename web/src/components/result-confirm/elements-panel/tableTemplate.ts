@@ -183,6 +183,21 @@ export const TABLE_JS = `
             // 双击单元格：进入编辑模式
             cell.addEventListener('dblclick', (e) => {
                 if (flexDiv.querySelector('textarea')) return; // 已有编辑框则忽略
+                
+                // 打印原始容器尺寸信息
+                console.log('原始容器尺寸:', {
+                    cell: {
+                        height: cell.offsetHeight,
+                        padding: window.getComputedStyle(cell).padding,
+                        lineHeight: window.getComputedStyle(cell).lineHeight
+                    },
+                    contentSpan: {
+                        height: contentSpan.offsetHeight,
+                        padding: window.getComputedStyle(contentSpan).padding,
+                        lineHeight: window.getComputedStyle(contentSpan).lineHeight,
+                        fontSize: window.getComputedStyle(contentSpan).fontSize
+                    }
+                });
 
                 // 创建多行文本编辑框
                 const textarea = document.createElement('textarea');
@@ -193,6 +208,11 @@ export const TABLE_JS = `
                 // 设置textarea初始高度与显示文字一致
                 textarea.style.height = contentSpan.offsetHeight + 'px';
 
+                // 打印contentSpan和textarea高度
+                setTimeout(() => {
+                    console.log('contentSpan高度:', contentSpan.offsetHeight, 'textarea高度:', textarea.offsetHeight);
+                }, 0);
+
                 // 隐藏内容区，插入编辑框
                 contentSpan.style.display = 'none';
                 flexDiv.insertBefore(textarea, controls);
@@ -202,10 +222,11 @@ export const TABLE_JS = `
                 const adjustHeight = (keepInitialHeight = false) => {
                     if (!keepInitialHeight) {
                         textarea.style.height = 'auto';
+                        textarea.style.minHeight = '24px';
+                        const newHeight = Math.max(textarea.scrollHeight, contentSpan.offsetHeight);
+                        textarea.style.height = newHeight + 'px';
                     }
-                    textarea.style.minHeight = '24px';
-                    const newHeight = Math.max(textarea.scrollHeight, contentSpan.offsetHeight);
-                    textarea.style.height = newHeight + 'px';
+                    // keepInitialHeight = true 时不做任何调整，保持初始设置的高度
                 };
                 adjustHeight(true); // 首次调用保持初始高度
 
