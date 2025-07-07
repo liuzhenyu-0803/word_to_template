@@ -26,6 +26,16 @@
     opacity: 1;
 }
 
+.upload-icon.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.upload-icon.disabled:hover {
+    transform: none;
+    opacity: 0.3;
+}
+
 .upload-text {
     color: #6c757d;
     font-size: 16px;

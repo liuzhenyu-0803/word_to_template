@@ -15,17 +15,14 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const syncManagerRef = useRef<SyncManager>(null);
     
-    // 存储 iframe 引用的 ref
     const leftIframeRef = useRef<HTMLIFrameElement>(null);
     const rightIframeRef = useRef<HTMLIFrameElement>(null);
 
-    // 拖拽处理逻辑
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
         setIsDragging(true);
     }, []);
 
-    // 使用 useCallback 缓存事件处理函数
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!containerRef.current) return;
 
@@ -45,7 +42,6 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         setIsDragging(false);
     }, []);
 
-    // 只在拖拽状态变化时添加/移除事件监听器
     useEffect(() => {
         if (isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
@@ -58,7 +54,6 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         };
     }, [isDragging, handleMouseMove, handleMouseUp]);
 
-    // 处理拖拽时的全局样式
     useEffect(() => {
         document.body.style.cursor = isDragging ? 'col-resize' : '';
 
@@ -67,7 +62,6 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         };
     }, [isDragging]);
 
-    // 处理 iframe 拖拽时的样式
     useEffect(() => {
         if (leftIframeRef.current) {
             leftIframeRef.current.style.pointerEvents = isDragging ? 'none' : 'auto';
@@ -77,7 +71,6 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         }
     }, [isDragging]);
 
-    // 初始化同步管理器
     useEffect(() => {
         syncManagerRef.current = new SyncManager();
 
@@ -88,14 +81,12 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         };
     }, []);
 
-    // 尝试设置同步管理器的函数
     const trySetSyncManager = useCallback(() => {
         if (leftIframeRef.current && rightIframeRef.current && syncManagerRef.current) {
             syncManagerRef.current.setIframes(leftIframeRef.current, rightIframeRef.current);
         }
     }, []);
 
-    // 左侧 iframe 的 callback ref - 管理引用并尝试设置同步管理器
     const handleLeftIframeRef = useCallback((element: HTMLIFrameElement | null) => {
         leftIframeRef.current = element;
         if (element) {
@@ -103,7 +94,6 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         }
     }, [trySetSyncManager]);
 
-    // 右侧 iframe 的 callback ref - 管理引用并尝试设置同步管理器
     const handleRightIframeRef = useCallback((element: HTMLIFrameElement | null) => {
         rightIframeRef.current = element;
         if (element) {
@@ -111,7 +101,6 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         }
     }, [trySetSyncManager]);
 
-    // 保存功能
     const handleSave = useCallback(async () => {
         if (!rightIframeRef.current) {
             console.error('右侧iframe未找到');
@@ -121,7 +110,6 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         try {
             setIsSaving(true);
             
-            // 获取右侧iframe的HTML内容
             const rightDoc = rightIframeRef.current.contentDocument;
             if (!rightDoc) {
                 throw new Error('无法获取右侧iframe内容');
@@ -129,7 +117,6 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
             
             const htmlContent = rightDoc.documentElement.outerHTML;
             
-            // 发送到后端
             const response = await fetch('http://localhost:3000/document_html', {
                 method: 'POST',
                 headers: {
@@ -142,12 +129,9 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
                 throw new Error(`保存失败: ${response.status}`);
             }
 
-            console.log('保存成功');
-            // 这里可以添加成功提示
-            
+            console.log('保存成功');            
         } catch (error) {
             console.error('保存失败:', error);
-            // 这里可以添加错误提示
         } finally {
             setIsSaving(false);
         }

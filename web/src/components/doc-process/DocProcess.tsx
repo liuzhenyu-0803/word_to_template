@@ -4,12 +4,10 @@ import ProgressPanel from './progress-panel/ProgressPanel';
 import './DocProcess.css';
 
 interface DocProcessProps {
-    wsMessages?: string[];
-    isProcessingComplete?: boolean;
     onShowResult?: () => void;
 }
 
-function DocProcess({ wsMessages = [], isProcessingComplete = false, onShowResult }: DocProcessProps) {
+function DocProcess({ onShowResult }: DocProcessProps) {
     const [leftWidth, setLeftWidth] = useState(50);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -69,7 +67,6 @@ function DocProcess({ wsMessages = [], isProcessingComplete = false, onShowResul
                 style={{ width: `${leftWidth}%` }}
             >
                 <FileUploadPanel
-                    isProcessingComplete={isProcessingComplete}
                     onShowResult={onShowResult}
                 />
             </div>
@@ -85,7 +82,7 @@ function DocProcess({ wsMessages = [], isProcessingComplete = false, onShowResul
                 className="doc-process-right"
                 style={{ width: `${100 - leftWidth}%` }}
             >
-                <ProgressPanel wsMessages={wsMessages} />
+                <ProgressPanel />
             </div>
         </div>
     );

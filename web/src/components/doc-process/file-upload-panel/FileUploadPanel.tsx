@@ -1,22 +1,26 @@
 import React, { useState, useRef } from 'react';
 import './FileUploadPanel.css';
+import fileUploadIcon from '../../../assets/file_upload.svg';
+import { useAppContext } from '../../../contexts/AppContext';
 
 interface FileUploadPanelProps {
-    isProcessingComplete?: boolean;
     onShowResult?: () => void;
 }
 
 function FileUploadPanel({
-    isProcessingComplete = false,
     onShowResult
 }: FileUploadPanelProps) {
     const [text, setText] = useState<string>('请上传word文档进行处理');
-    const fileInputRef = useRef<HTMLInputElement>(null); // 1. 创建 ref
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const { isDocProcessingComplete, isProcessing, setProcessing, clearMessages, resetProcessingState } = useAppContext();
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && file.name.endsWith('.docx')) {
             setText('正在上传...');
+            clearMessages();
+            resetProcessingState();
+            setProcessing(true);
 
             try {
                 const formData = new FormData();
@@ -24,9 +28,6 @@ function FileUploadPanel({
 
                 const response = await fetch('http://localhost:3000/document', {
                     method: 'POST',
-                    headers: {
-                        'Accept-Charset': 'utf-8'
-                    },
                     body: formData
                 });
 
@@ -39,12 +40,15 @@ function FileUploadPanel({
             } catch (error) {
                 console.error('上传错误:', error);
                 setText('上传失败，请重试');
+                setProcessing(false);
             }
         }
     };
 
     const handleClick = () => {
-        fileInputRef.current?.click();
+        if (!isProcessing) {
+            fileInputRef.current?.click();
+        }
     };
 
     return (
@@ -55,17 +59,18 @@ function FileUploadPanel({
                 onChange={handleFileChange}
                 accept=".docx"
                 style={{ display: 'none' }}
+                disabled={isProcessing}
             />
             <div className="upload-placeholder">
                 <img
-                    src="/src/assets/file_upload.svg"
+                    src={fileUploadIcon}
                     alt="上传图标"
-                    className="upload-icon"
+                    className={`upload-icon ${isProcessing ? 'disabled' : ''}`}
                     onClick={handleClick}
                 />
                 <p className="upload-text">{text}</p>
 
-                {isProcessingComplete && (
+                {isDocProcessingComplete && (
                     <div className="result-actions">
                         <button
                             className="review-result-btn"
