@@ -7,6 +7,7 @@ export class SyncManager {
     private leftLoaded = false;
     private rightLoaded = false;
     private loadListenersSetup = false;
+    private isUpdating = false; // 防止死循环标志
 
     constructor() {
         this.observer = new MutationObserver(this.handleMutations.bind(this));
@@ -98,6 +99,11 @@ export class SyncManager {
     }
 
     private handleMutations = (mutations: MutationRecord[]) => {
+        // 防止死循环：如果正在更新中，直接返回
+        if (this.isUpdating) {
+            return;
+        }
+
         mutations.forEach((mutation) => {
             const cell = (mutation.target as Element).closest('td');
             if (cell && cell.getAttribute('data-cell-id')) {
@@ -107,7 +113,17 @@ export class SyncManager {
                 const currentContent = contentSpan?.textContent || '';
 
                 console.log(`🔄 单元格 ${cellId} 内容变化: ${currentContent}`);
-                this.updateRightCell(cellId!, originalContent!, currentContent);
+                
+                // 设置更新标志，防止死循环
+                this.isUpdating = true;
+                
+                try {
+                    this.updateRightCell(cellId!, originalContent!, currentContent);
+                    this.updateLeftCell(cellId!, originalContent!, currentContent);
+                } finally {
+                    // 确保在任何情况下都能重置标志
+                    this.isUpdating = false;
+                }
             }
         });
     };
@@ -144,6 +160,36 @@ export class SyncManager {
             targetCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } else {
             console.log('❌ SyncManager: Target cell not found in right iframe');
+        }
+    }
+
+    private updateLeftCell(cellId: string, originalContent: string, newContent: string) {
+        console.log('🔄 SyncManager: updateLeftCell called', { cellId, originalContent, newContent });
+
+        if (!this.leftIframe?.contentDocument) {
+            console.log('❌ SyncManager: No left iframe contentDocument');
+            return;
+        }
+
+        const leftDoc = this.leftIframe.contentDocument;
+        const targetCell = leftDoc.querySelector(`[data-cell-id="${cellId}"]`) as HTMLElement;
+
+        console.log('🎯 SyncManager: Looking for left target cell', cellId, targetCell);
+
+        if (targetCell) {
+            // 使用统一的高亮处理方法
+            this.applyCellHighlight(targetCell, newContent, originalContent);
+
+            // // 设置或移除 data-original-content 属性
+            // if (originalContent !== newContent) {
+            //     targetCell.setAttribute(DATA_ORIGINAL_CONTENT, originalContent);
+            //     console.log('✅ SyncManager: Updated left cell and set data-original-content');
+            // } else {
+            //     targetCell.removeAttribute(DATA_ORIGINAL_CONTENT);
+            //     console.log('✅ SyncManager: Restored left cell and removed data-original-content');
+            // }
+        } else {
+            console.log('❌ SyncManager: Left target cell not found in left iframe');
         }
     }
 
