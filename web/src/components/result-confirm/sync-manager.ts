@@ -1,3 +1,5 @@
+import { DATA_ORIGINAL_CONTENT } from '../../constants';
+
 export class SyncManager {
     private leftIframe: HTMLIFrameElement | null = null;
     private rightIframe: HTMLIFrameElement | null = null;
@@ -76,7 +78,13 @@ export class SyncManager {
             console.log('🎯 SyncManager: Looking for table in left iframe', table);
 
             if (table) {
-                console.log('✅ SyncManager: Table found, setting up observer');
+                console.log('✅ SyncManager: Table found, checking cells highlight');
+                // 检查左侧iframe中的cells高亮状态
+                this.checkLeftCellsHighlight();
+                // 检查右侧iframe中的cells高亮状态
+                this.checkRightCellsHighlight();
+                
+                // 设置 observer
                 this.observer.observe(table, {
                     subtree: true,
                     characterData: true,
@@ -95,7 +103,7 @@ export class SyncManager {
             if (cell && cell.getAttribute('data-cell-id')) {
                 const cellId = cell.getAttribute('data-cell-id');
                 const contentSpan = cell.querySelector('.cell-content');
-                const originalContent = cell.getAttribute('data-original-content');
+                const originalContent = cell.getAttribute(DATA_ORIGINAL_CONTENT);
                 const currentContent = contentSpan?.textContent || '';
 
                 console.log(`🔄 单元格 ${cellId} 内容变化: ${currentContent}`);
@@ -120,14 +128,16 @@ export class SyncManager {
         if (targetCell) {
             targetCell.textContent = newContent;
 
+            // 使用统一的高亮处理方法
+            this.applyCellHighlight(targetCell, newContent, originalContent);
+
+            // 设置或移除 data-original-content 属性
             if (originalContent !== newContent) {
-                targetCell.style.border = '2px solid red';
-                targetCell.style.backgroundColor = '#ffe6e6';
-                console.log('✅ SyncManager: Updated cell with highlight');
+                targetCell.setAttribute(DATA_ORIGINAL_CONTENT, originalContent);
+                console.log('✅ SyncManager: Updated cell and set data-original-content');
             } else {
-                targetCell.style.border = '';
-                targetCell.style.backgroundColor = '';
-                console.log('✅ SyncManager: Restored cell to original');
+                targetCell.removeAttribute(DATA_ORIGINAL_CONTENT);
+                console.log('✅ SyncManager: Restored cell and removed data-original-content');
             }
 
             // 自动滚动到对应单元格
@@ -135,6 +145,71 @@ export class SyncManager {
         } else {
             console.log('❌ SyncManager: Target cell not found in right iframe');
         }
+    }
+
+    /**
+     * 统一的高亮处理方法
+     * @param cell 单元格元素
+     * @param currentContent 当前内容
+     * @param originalContent 原始内容
+     */
+    private applyCellHighlight(cell: HTMLElement, currentContent: string, originalContent: string) {
+        if (originalContent !== currentContent) {
+            // 内容不同，添加高亮样式
+            cell.style.border = '2px solid red';
+            cell.style.backgroundColor = '#ffe6e6';
+            console.log(`✅ 单元格高亮: 原始="${originalContent}", 当前="${currentContent}"`);
+        } else {
+            // 内容相同，取消高亮样式
+            cell.style.border = '';
+            cell.style.backgroundColor = '';
+            console.log(`✅ 单元格取消高亮: 内容相同="${currentContent}"`);
+        }
+    }
+
+    private checkRightCellsHighlight() {
+        console.log('🔍 SyncManager: Checking right iframe cells highlight');
+        
+        if (!this.rightIframe?.contentDocument) {
+            console.log('❌ SyncManager: No right iframe contentDocument');
+            return;
+        }
+
+        const rightDoc = this.rightIframe.contentDocument;
+        const cells = rightDoc.querySelectorAll('[data-cell-id]') as NodeListOf<HTMLElement>;
+        
+        cells.forEach(cell => {
+            const cellId = cell.getAttribute('data-cell-id');
+            const originalContent = cell.getAttribute(DATA_ORIGINAL_CONTENT);
+            const currentContent = cell.textContent || '';
+            
+            if (cell.hasAttribute(DATA_ORIGINAL_CONTENT) && originalContent) {
+                this.applyCellHighlight(cell, currentContent, originalContent);
+            }
+        });
+    }
+
+    private checkLeftCellsHighlight() {
+        console.log('🔍 SyncManager: Checking left iframe cells highlight');
+        
+        if (!this.leftIframe?.contentDocument) {
+            console.log('❌ SyncManager: No left iframe contentDocument');
+            return;
+        }
+
+        const leftDoc = this.leftIframe.contentDocument;
+        const cells = leftDoc.querySelectorAll('[data-cell-id]') as NodeListOf<HTMLElement>;
+        
+        cells.forEach(cell => {
+            const cellId = cell.getAttribute('data-cell-id');
+            const originalContent = cell.getAttribute(DATA_ORIGINAL_CONTENT);
+            const contentSpan = cell.querySelector('.cell-content');
+            const currentContent = contentSpan?.textContent || '';
+            
+            if (cell.hasAttribute(DATA_ORIGINAL_CONTENT) && originalContent) {
+                this.applyCellHighlight(cell, currentContent, originalContent);
+            }
+        });
     }
 
     destroy() {

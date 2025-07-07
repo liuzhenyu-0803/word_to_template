@@ -4,7 +4,7 @@ import json
 from bs4 import BeautifulSoup
 from models.model_manager import llm_manager
 from callback.callback import callback_handler
-from global_define.constants import ATTR_CELL_MODIFIED, ATTR_ORIGINAL_CONTENT
+from global_define.constants import ATTR_ORIGINAL_CONTENT
 
 async def _call_llm_and_parse_json(prompt: str):
     """调用LLM并解析返回的JSON数组"""

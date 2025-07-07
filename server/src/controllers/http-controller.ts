@@ -3,13 +3,13 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { sendMessage } from './websocket-controller';
-import { WS_MESSAGE_TYPE, CLIENT_NAME } from '../config/constants';
+import { WS_MESSAGE_TYPE, CLIENT_NAME, DOCUMENT_ROOT } from '../config/constants';
 
 export const handleGetRequest = async (req: Request, res: Response) => {
     console.log('GET请求url:', req.url);
     try {
         if (req.url === '/document_html') {
-            const filePath = path.join(__dirname, '../../document/document.html');
+            const filePath = path.join(__dirname, '../../', DOCUMENT_ROOT, 'document.html');
             try {
                 const data = await fs.promises.readFile(filePath, 'utf8');
                 res.setHeader('Content-Type', 'text/html');
@@ -19,7 +19,7 @@ export const handleGetRequest = async (req: Request, res: Response) => {
                 res.status(500).json({ error: `无法读取文档: ${filePath}` });
             }
         } else if (req.url === '/elements_htmls') {
-            const dirPath = path.join(__dirname, '../../document/document_extract');
+            const dirPath = path.join(__dirname, '../../', DOCUMENT_ROOT, 'document_extract');
             if (!fs.existsSync(dirPath)) {
                 console.error('Directory does not exist:', dirPath);
                 res.status(404).json({ error: `目录不存在: ${dirPath}` });
@@ -52,7 +52,7 @@ export const handleGetRequest = async (req: Request, res: Response) => {
                 res.status(500).json({ error: `无法读取目录: ${dirPath}` });
             }
         } else if (req.url === '/template') {
-            const filePath = path.join(__dirname, '../../document/template.docx');
+            const filePath = path.join(__dirname, '../../', DOCUMENT_ROOT, 'template.docx');
             try {
                 const data = await fs.promises.readFile(filePath);
                 res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
@@ -71,7 +71,7 @@ export const handleGetRequest = async (req: Request, res: Response) => {
 
 const document_storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '../../document');
+        const uploadDir = path.join(__dirname, '../../', DOCUMENT_ROOT);
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -108,8 +108,12 @@ export const handleDocumentPost = [
 
 export const handleDocumentHtmlPost = async (req: Request, res: Response) => {
     console.log('POST请求 /document_html');
+    console.log('Request headers:', req.headers);
+    console.log('Request body type:', typeof req.body);
+    console.log('Request body:', req.body);
+    console.log('Request body length:', req.body ? req.body.length : 'undefined');
 
-    const filePath = path.join(__dirname, '../../document/document.html');
+    const filePath = path.join(__dirname, '../../', DOCUMENT_ROOT, 'document.html');
     let htmlContent = '';
     
     htmlContent = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
@@ -135,7 +139,7 @@ export const handleDocumentHtmlPost = async (req: Request, res: Response) => {
 
 const template_storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '../../document');
+        const uploadDir = path.join(__dirname, '../../', DOCUMENT_ROOT);
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }

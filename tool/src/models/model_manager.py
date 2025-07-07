@@ -16,7 +16,7 @@ class ModelManager:
     """
     
     def __init__(self, 
-                 api_key: str = "11sk-or-v1-37dd84eb11baaebb4da929794ab5e01463b5b797f6738f0c9f4dce1af1862a7c",
+                 api_key: str = "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",
                  base_url: str = "https://openrouter.ai/api/v1",
                  model: str = "google/gemma-3n-e4b-it"):
         """
@@ -32,9 +32,9 @@ class ModelManager:
         self.model = model
         # self.model = "google/gemma-3-12b-it"
         # self.model = "google/gemma-3-12b-it"
-        # self.model = "amazon/nova-lite-v1"
+        self.model = "amazon/nova-lite-v1"
         # self.model = "google/gemini-2.0-flash-lite-001"
-        self.model = "google/gemini-2.5-flash-lite-preview-06-17"
+        # self.model = "google/gemini-2.5-flash-lite-preview-06-17"
     
     def create_completion(self, messages: List[Dict[str, str]]):
         """

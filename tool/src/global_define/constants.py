@@ -5,9 +5,6 @@
 # 用于标记斜线分割单元格的HTML属性
 ATTR_DIAGONAL_SPLIT_TYPE = 'data-diagonal-split-type'
 
-# 用于标记单元格内容是否被修改的HTML属性
-ATTR_CELL_MODIFIED = 'data-modified'
-
 # 用于标记单元格是否包含内嵌表格的HTML属性
 ATTR_HAS_NESTED_TABLE = 'data-has-nested-table'
 

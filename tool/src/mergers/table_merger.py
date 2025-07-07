@@ -63,6 +63,8 @@ async def merge_tables(html_path: str, extract_dir: str) -> None:
                     # 只替换单元格内容，保持其他属性不变
                     new_content = modified_cell.get_text(strip=True)
                     original_cell.string = new_content
+                    # 同步 data-original-content 属性
+                    original_cell[ATTR_ORIGINAL_CONTENT] = modified_cell.get(ATTR_ORIGINAL_CONTENT)
                     merged_count += 1
             
             if merged_count > 0:

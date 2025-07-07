@@ -19,6 +19,7 @@ export const initHttpServer = () => {
     }));
 
     app.use(express.json());
+    app.use(express.text({ type: 'text/html' }));
 
     app.get('/document_html', handleGetRequest);
     app.get('/elements_htmls', handleGetRequest);

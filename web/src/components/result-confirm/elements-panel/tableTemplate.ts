@@ -1,3 +1,5 @@
+import { DATA_ORIGINAL_CONTENT } from '../../../constants';
+
 export const TABLE_CSS = `
 /* 全局重置：清除所有元素的 margin 和 padding，统一盒模型 */
 * {
@@ -8,12 +10,13 @@ export const TABLE_CSS = `
 
 /* 页面主体布局样式 */
 body {
-    min-height: 100dvh; /* 最小高度为100动态视口高度 */
-    padding: 20px; /* 内边距20px */
+    width: fit-content; /* 宽度自适应内容 */
+    height: 100dvh; /* 最小高度为100动态视口高度 */
+    padding: 20px; /* 容器内边距20px */
     display: flex; /* 启用弹性布局 */
-    justify-content: center; /* 水平居中 */
-    align-items: center; /* 垂直居中 */
+    justify-content: center; /* 垂直居中 */
     flex-direction: column; /* 纵向排列子元素 */
+    overflow-y: hidden; /* 禁止纵向滚动条 */
 }
 
 /* 表格整体样式 */
@@ -125,7 +128,11 @@ export const TABLE_JS = `
              * - 原始内容包裹在 span
              * - 添加控件（下拉、撤销按钮）
              */
-            cell.setAttribute('data-original-content', cell.textContent);
+            if (!cell.hasAttribute('${DATA_ORIGINAL_CONTENT}')) {
+                cell.setAttribute('${DATA_ORIGINAL_CONTENT}', cell.textContent);
+                console.log('设置单元格原始内容:', cell.textContent);
+            }
+            currentContent = cell.textContent;
             cell.textContent = '';
 
             // 创建flex容器，包含内容和控件
@@ -135,7 +142,7 @@ export const TABLE_JS = `
             // 内容区
             const contentSpan = document.createElement('span');
             contentSpan.className = 'cell-content';
-            contentSpan.textContent = cell.getAttribute('data-original-content');
+            contentSpan.textContent = currentContent;
 
             // 控件区
             const controls = document.createElement('div');
@@ -169,6 +176,8 @@ export const TABLE_JS = `
             cell.appendChild(flexDiv);
             cell.appendChild(dropdownContent);
 
+            // 注意：初始样式检查由外部SyncManager统一处理
+
             // 事件监听区
 
             // 双击单元格：进入编辑模式
@@ -181,6 +190,8 @@ export const TABLE_JS = `
 
                 // 设置textarea宽度与cell-content一致
                 textarea.style.width = contentSpan.offsetWidth + 'px';
+                // 设置textarea初始高度与显示文字一致
+                textarea.style.height = contentSpan.offsetHeight + 'px';
 
                 // 隐藏内容区，插入编辑框
                 contentSpan.style.display = 'none';
@@ -188,21 +199,26 @@ export const TABLE_JS = `
                 textarea.focus();
 
                 // 自动调整高度以适应内容
-                const adjustHeight = () => {
-                    textarea.style.height = 'auto';
-                    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+                const adjustHeight = (keepInitialHeight = false) => {
+                    if (!keepInitialHeight) {
+                        textarea.style.height = 'auto';
+                    }
+                    textarea.style.minHeight = '24px';
+                    const newHeight = Math.max(textarea.scrollHeight, contentSpan.offsetHeight);
+                    textarea.style.height = newHeight + 'px';
                 };
-                adjustHeight();
+                adjustHeight(true); // 首次调用保持初始高度
 
                 // 结束编辑（保存/取消）
                 const finishEditing = (saveChanges) => {
                     if (!flexDiv.contains(textarea)) return;
                     if (saveChanges) {
                         // 保留换行符，使用innerHTML显示
-                        contentSpan.innerHTML = textarea.value.replace(/\\n/g, '<br>');
+                        contentSpan.textContent = textarea.value.replace(/\\n/g, '<br>');
                     }
                     flexDiv.removeChild(textarea);
                     contentSpan.style.display = '';
+                    // 注意：样式检查由外部SyncManager统一处理
                 };
 
                 // 失焦或按键事件
@@ -236,13 +252,15 @@ export const TABLE_JS = `
                     e.stopPropagation();
                     contentSpan.textContent = option.textContent;
                     dropdownContent.classList.remove('show');
+                    // 注意：样式检查由外部SyncManager统一处理
                 });
             });
 
             // 撤销按钮点击：恢复原始内容
             undoButton.addEventListener('click', (e) => {
                 e.stopPropagation();
-                contentSpan.textContent = cell.getAttribute('data-original-content');
+                contentSpan.textContent = cell.getAttribute('${DATA_ORIGINAL_CONTENT}');
+                // 注意：样式检查由外部SyncManager统一处理
             });
         }
     });
@@ -258,6 +276,8 @@ export const TABLE_JS = `
         }
     }
     window.addEventListener('click', handleGlobalClick);
+
+    // 注意：高亮样式处理已移至外部SyncManager统一管理
 })();`;
 
 export const generateTableHTML = (content: string): string => {
@@ -271,7 +291,7 @@ export const generateTableHTML = (content: string): string => {
   <style>${TABLE_CSS}</style>
 </head>
 <body>
-  ${content}
+    ${content}
   <script>${TABLE_JS}</script>
 </body>
 </html>`;

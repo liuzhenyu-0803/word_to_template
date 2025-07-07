@@ -1,6 +1,9 @@
 export const PORT = 3000;
 export const CHILD_PROCESS = 'test.exe';
 
+// 文档根目录路径
+export const DOCUMENT_ROOT = '../tool/document';
+
 export const CORS_CONFIG = {
   allowedOrigin: '*',
   allowedMethods: 'GET, POST, OPTIONS',

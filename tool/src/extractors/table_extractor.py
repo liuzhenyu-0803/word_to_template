@@ -6,7 +6,7 @@ from callback.callback import callback_handler
 
 import os
 from bs4 import BeautifulSoup
-from global_define.constants import ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_CELL_ID
+from global_define.constants import ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_CELL_ID, ATTR_ORIGINAL_CONTENT
 
 
 async def extract_tables(html_file_path: str, output_dir: str) -> None:
@@ -107,7 +107,7 @@ def _create_clean_row(original_row, soup):
         new_cell = soup.new_tag(cell.name)
         
         # 复制原始属性
-        for attr in [ATTR_CELL_ID, ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, 'colspan', 'rowspan']:
+        for attr in [ATTR_CELL_ID, ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_ORIGINAL_CONTENT, 'colspan', 'rowspan']:
             if cell.has_attr(attr):
                 new_cell[attr] = cell[attr]
         

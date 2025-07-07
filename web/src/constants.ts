@@ -6,3 +6,6 @@ export const WS_MESSAGE_TYPE = {
   DOC_SAVE_START: 3,        // 通知保存文档
   DOC_SAVE_COMPLETE: 4      // 通知保存文档完成
 };
+
+// 表格原始内容属性常量
+export const DATA_ORIGINAL_CONTENT = 'data-original-content';
