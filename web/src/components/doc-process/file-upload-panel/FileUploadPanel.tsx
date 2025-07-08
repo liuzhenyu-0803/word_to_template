@@ -7,20 +7,37 @@ interface FileUploadPanelProps {
     onShowResult?: () => void;
 }
 
-function FileUploadPanel({
-    onShowResult
-}: FileUploadPanelProps) {
-    const [text, setText] = useState<string>('请上传word文档进行处理');
+export default function FileUploadPanel({ onShowResult }: FileUploadPanelProps) {
+    const [uploadedFileName, setUploadedFileName] = useState<string>('');
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const { isDocProcessingComplete, isProcessing, setProcessing, clearMessages, resetProcessingState } = useAppContext();
+    const { processingStatus, setProcessingStatus, clearMessages } = useAppContext();
+
+    const isUIBlocked = processingStatus === 'uploading' || processingStatus === 'processing';
+    const isReadyForReview = processingStatus === 'ready';
+    
+    const getDisplayText = () => {
+        switch (processingStatus) {
+            case 'idle':
+                return '请上传word文档进行处理';
+            case 'uploading':
+                return '正在上传...';
+            case 'processing':
+                return '处理中...';
+            case 'ready':
+                return uploadedFileName || '处理完成';
+            case 'error':
+                return '上传失败，请重试';
+            default:
+                return '请上传word文档进行处理';
+        }
+    };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file && file.name.endsWith('.docx')) {
-            setText('正在上传...');
+            setProcessingStatus('uploading');
+            setUploadedFileName('');
             clearMessages();
-            resetProcessingState();
-            setProcessing(true);
 
             try {
                 const formData = new FormData();
@@ -34,19 +51,19 @@ function FileUploadPanel({
                 if (!response.ok) {
                     throw new Error('上传失败');
                 }
-
-                console.log('文件上传成功');
-                setText(file.name);
+                
+                setUploadedFileName(file.name);
+                setProcessingStatus('processing');
             } catch (error) {
                 console.error('上传错误:', error);
-                setText('上传失败，请重试');
-                setProcessing(false);
+                setProcessingStatus('error');
+                setUploadedFileName('');
             }
         }
     };
 
     const handleClick = () => {
-        if (!isProcessing) {
+        if (!isUIBlocked) {
             fileInputRef.current?.click();
         }
     };
@@ -59,18 +76,18 @@ function FileUploadPanel({
                 onChange={handleFileChange}
                 accept=".docx"
                 style={{ display: 'none' }}
-                disabled={isProcessing}
+                disabled={isUIBlocked}
             />
             <div className="upload-placeholder">
                 <img
                     src={fileUploadIcon}
                     alt="上传图标"
-                    className={`upload-icon ${isProcessing ? 'disabled' : ''}`}
+                    className={`upload-icon ${isUIBlocked ? 'disabled' : ''}`}
                     onClick={handleClick}
                 />
-                <p className="upload-text">{text}</p>
+                <p className="upload-text">{getDisplayText()}</p>
 
-                {isDocProcessingComplete && (
+                {isReadyForReview && (
                     <div className="result-actions">
                         <button
                             className="review-result-btn"
@@ -83,6 +100,4 @@ function FileUploadPanel({
             </div>
         </div>
     );
-};
-
-export default FileUploadPanel;
+}

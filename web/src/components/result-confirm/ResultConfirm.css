@@ -109,3 +109,9 @@
 .result-confirm-splitter:active .splitter-line {
     background-color: #ffffff;
 }
+
+/* 拖拽状态样式 */
+.result-confirm.dragging {
+    cursor: col-resize;
+    user-select: none;
+}

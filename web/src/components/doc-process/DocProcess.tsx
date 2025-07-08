@@ -3,42 +3,47 @@ import FileUploadPanel from './file-upload-panel/FileUploadPanel';
 import ProgressPanel from './progress-panel/ProgressPanel';
 import './DocProcess.css';
 
-interface DocProcessProps {
-    onShowResult?: () => void;
-}
+const SPLITTER_CONFIG = {
+    MIN_WIDTH: 20,
+    MAX_WIDTH: 80,
+    DEFAULT_WIDTH: 50,
+};
 
-function DocProcess({ onShowResult }: DocProcessProps) {
-    const [leftWidth, setLeftWidth] = useState(50);
+function useSplitter(initialWidth: number = SPLITTER_CONFIG.DEFAULT_WIDTH) {
+    const [leftWidth, setLeftWidth] = useState(initialWidth);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // 拖拽处理逻辑
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
         setIsDragging(true);
     }, []);
 
-    // 使用 useCallback 缓存事件处理函数
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!containerRef.current) return;
 
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const containerWidth = containerRect.width;
-        const mouseX = e.clientX - containerRect.left;
-        const newLeftWidth = (mouseX / containerWidth) * 100;
+        try {
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            
+            const mouseX = e.clientX - containerRect.left;
+            const newLeftWidth = (mouseX / containerWidth) * 100;
 
-        const minWidth = 20;
-        const maxWidth = 80;
-        const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newLeftWidth));
+            const clampedWidth = Math.max(
+                SPLITTER_CONFIG.MIN_WIDTH,
+                Math.min(SPLITTER_CONFIG.MAX_WIDTH, newLeftWidth)
+            );
 
-        setLeftWidth(clampedWidth);
+            setLeftWidth(clampedWidth);
+        } catch (error) {
+            console.error('Error calculating splitter position:', error);
+        }
     }, []);
 
     const handleMouseUp = useCallback(() => {
         setIsDragging(false);
     }, []);
 
-    // 只在拖拽状态变化时添加/移除事件监听器
     useEffect(() => {
         if (isDragging) {
             document.addEventListener('mousemove', handleMouseMove);
@@ -51,17 +56,26 @@ function DocProcess({ onShowResult }: DocProcessProps) {
         };
     }, [isDragging, handleMouseMove, handleMouseUp]);
 
-    // 处理拖拽时的全局样式
-    useEffect(() => {
-        document.body.style.cursor = isDragging ? 'col-resize' : '';
+    return {
+        leftWidth,
+        isDragging,
+        containerRef,
+        handleMouseDown,
+    };
+}
 
-        return () => {
-            document.body.style.cursor = '';
-        };
-    }, [isDragging]);
+interface DocProcessProps {
+    onShowResult?: () => void;
+}
+
+export default function DocProcess({ onShowResult }: DocProcessProps) {
+    const { leftWidth, isDragging, containerRef, handleMouseDown } = useSplitter();
 
     return (
-        <div className="doc-process" ref={containerRef}>
+        <div 
+            className={`doc-process ${isDragging ? 'dragging' : ''}`} 
+            ref={containerRef}
+        >
             <div
                 className="doc-process-left"
                 style={{ width: `${leftWidth}%` }}
@@ -87,5 +101,3 @@ function DocProcess({ onShowResult }: DocProcessProps) {
         </div>
     );
 }
-
-export default DocProcess;

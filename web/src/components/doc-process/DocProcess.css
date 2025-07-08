@@ -3,6 +3,11 @@
     display: flex;
 }
 
+.doc-process.dragging {
+    cursor: col-resize;
+    user-select: none;
+}
+
 .doc-process-splitter {
     width: 6px;
     background-color: #e9ecef;

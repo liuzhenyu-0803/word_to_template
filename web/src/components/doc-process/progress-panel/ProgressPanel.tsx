@@ -1,30 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import './ProgressPanel.css';
 import { useAppContext } from '../../../contexts/AppContext';
+import { WS_MESSAGE_TYPE } from '../../../constants';
 
-function ProgressPanel() {
-  const [messages, setMessages] = useState<string[]>([]);
+export default function ProgressPanel() {
   const { wsMessages } = useAppContext();
 
-  useEffect(() => {
-    if (wsMessages.length > messages.length) {
-      const newMessages = wsMessages.slice(messages.length);
-      newMessages.forEach(msgData => {
-        try {
-          const data = JSON.parse(msgData);
-          if (data.type === 2) {
-            setMessages(prev => [...prev, 
-              `进度: ${data.progressMessage} ${data.isFinished ? '(完成)' : ''}`
-            ]);
-          } else {
-            setMessages(prev => [...prev, msgData]);
-          }
-        } catch {
-          setMessages(prev => [...prev, msgData]);
+  const processedMessages = useMemo(() => {
+    return wsMessages.map(msgData => {
+      try {
+        const data = JSON.parse(msgData);
+        if (data.type === WS_MESSAGE_TYPE.DOC_PROCESS_PROGRESS) {
+          return `进度: ${data.progressMessage} ${data.isFinished ? '(完成)' : ''}`;
         }
-      });
-    }
-  }, [wsMessages, messages.length]);
+        return msgData;
+      } catch {
+        return msgData;
+      }
+    });
+  }, [wsMessages]);
 
   return (
     <div className="progress-panel">
@@ -32,7 +26,7 @@ function ProgressPanel() {
         <h3>实时消息</h3>
       </div>
       <div className="progress-panel-content">
-        {messages.map((msg, index) => (
+        {processedMessages.map((msg, index) => (
           <div key={index} className="message-item">
             {msg}
           </div>
@@ -40,6 +34,4 @@ function ProgressPanel() {
       </div>
     </div>
   );
-};
-
-export default ProgressPanel;
+}

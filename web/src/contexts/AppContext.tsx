@@ -2,13 +2,18 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { WS_MESSAGE_TYPE } from '../constants';
 
+export type ProcessingStatus = 
+  | 'idle'           // 空闲状态：可以上传文件
+  | 'uploading'      // 上传中：UI阻塞，显示"正在上传..."
+  | 'processing'     // 处理中：UI阻塞，显示"处理中..."
+  | 'ready'          // 完成：UI解锁，显示文件名，可以审核
+  | 'error';         // 错误：UI解锁，显示错误信息
+
 interface AppContextType {
     wsMessages: string[];
-    isDocProcessingComplete: boolean;
-    isProcessing: boolean;
-    setProcessing: (processing: boolean) => void;
+    processingStatus: ProcessingStatus;
+    setProcessingStatus: (status: ProcessingStatus) => void;
     clearMessages: () => void;
-    resetProcessingState: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -25,16 +30,14 @@ interface AppProviderProps {
     children: ReactNode;
 }
 
-export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+export function AppProvider({ children }: AppProviderProps) {
     const [wsMessages, setWsMessages] = useState<string[]>([]);
-    const [isDocProcessingComplete, setDocProcessingComplete] = useState(false);
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>('idle');
 
     useEffect(() => {
         const webSocket = new WebSocket('ws://localhost:3000');
 
         webSocket.onopen = () => {
-            console.log('App WebSocket connected');
             webSocket.send(JSON.stringify({
                 type: WS_MESSAGE_TYPE.CLIENT_NAME,
                 clientName: 'web_client'
@@ -47,8 +50,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === WS_MESSAGE_TYPE.DOC_PROCESS_PROGRESS && data.isFinished === 1) {
-                    setDocProcessingComplete(true);
-                    setIsProcessing(false);
+                    setProcessingStatus('ready');
                 } else if (data.type === WS_MESSAGE_TYPE.DOC_SAVE_COMPLETE) {
                     downloadTemplate();
                 }
@@ -84,8 +86,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             link.download = 'template.docx';
             link.click();
             setTimeout(() => URL.revokeObjectURL(url), 100);
-
-            console.log('模板下载成功');
         } catch (error) {
             console.error('下载模板失败:', error);
         }
@@ -95,25 +95,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setWsMessages([]);
     };
 
-    const resetProcessingState = () => {
-        setDocProcessingComplete(false);
-        setIsProcessing(false);
-    };
-
-    const setProcessing = (processing: boolean) => {
-        setIsProcessing(processing);
-    };
-
     return (
         <AppContext.Provider value={{
             wsMessages,
-            isDocProcessingComplete,
-            isProcessing,
-            setProcessing,
-            clearMessages,
-            resetProcessingState
+            processingStatus,
+            setProcessingStatus,
+            clearMessages
         }}>
             {children}
         </AppContext.Provider>
     );
-};
+}

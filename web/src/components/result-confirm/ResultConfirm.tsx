@@ -8,15 +8,18 @@ interface ResultConfirmProps {
     onBack: () => void;
 }
 
-function ResultConfirm({ onBack }: ResultConfirmProps) {
-    const [leftWidth, setLeftWidth] = useState(50);
+// 拖拽分隔器配置常量
+const SPLITTER_CONFIG = {
+    MIN_WIDTH: 20,
+    MAX_WIDTH: 60,
+    DEFAULT_WIDTH: 50,
+};
+
+// 自定义 Hook: 处理拖拽分隔器逻辑
+function useSplitter(initialWidth: number = SPLITTER_CONFIG.DEFAULT_WIDTH) {
+    const [leftWidth, setLeftWidth] = useState(initialWidth);
     const [isDragging, setIsDragging] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const syncManagerRef = useRef<SyncManager>(null);
-    
-    const leftIframeRef = useRef<HTMLIFrameElement>(null);
-    const rightIframeRef = useRef<HTMLIFrameElement>(null);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
@@ -26,16 +29,28 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
     const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!containerRef.current) return;
 
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const containerWidth = containerRect.width;
-        const mouseX = e.clientX - containerRect.left;
-        const newLeftWidth = (mouseX / containerWidth) * 100;
+        try {
+            const containerRect = containerRef.current.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            
+            // 防止容器宽度为 0 的边界情况
+            if (containerWidth <= 0) {
+                console.warn('Container width is invalid:', containerWidth);
+                return;
+            }
 
-        const minWidth = 20;
-        const maxWidth = 60;
-        const clampedWidth = Math.max(minWidth, Math.min(maxWidth, newLeftWidth));
+            const mouseX = e.clientX - containerRect.left;
+            const newLeftWidth = (mouseX / containerWidth) * 100;
 
-        setLeftWidth(clampedWidth);
+            const clampedWidth = Math.max(
+                SPLITTER_CONFIG.MIN_WIDTH,
+                Math.min(SPLITTER_CONFIG.MAX_WIDTH, newLeftWidth)
+            );
+
+            setLeftWidth(clampedWidth);
+        } catch (error) {
+            console.error('Error calculating splitter position:', error);
+        }
     }, []);
 
     const handleMouseUp = useCallback(() => {
@@ -54,14 +69,23 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         };
     }, [isDragging, handleMouseMove, handleMouseUp]);
 
-    useEffect(() => {
-        document.body.style.cursor = isDragging ? 'col-resize' : '';
+    return {
+        leftWidth,
+        isDragging,
+        containerRef,
+        handleMouseDown,
+    };
+}
 
-        return () => {
-            document.body.style.cursor = '';
-        };
-    }, [isDragging]);
+export default function ResultConfirm({ onBack }: ResultConfirmProps) {
+    const { leftWidth, isDragging, containerRef, handleMouseDown } = useSplitter();
+    const [isSaving, setIsSaving] = useState(false);
+    const syncManagerRef = useRef<SyncManager>(null);
+    
+    const leftIframeRef = useRef<HTMLIFrameElement>(null);
+    const rightIframeRef = useRef<HTMLIFrameElement>(null);
 
+    // 处理iframe的pointer-events，防止拖拽时iframe拦截鼠标事件
     useEffect(() => {
         if (leftIframeRef.current) {
             leftIframeRef.current.style.pointerEvents = isDragging ? 'none' : 'auto';
@@ -180,5 +204,3 @@ function ResultConfirm({ onBack }: ResultConfirmProps) {
         </div>
     );
 }
-
-export default ResultConfirm;
