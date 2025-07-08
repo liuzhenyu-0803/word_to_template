@@ -18,7 +18,7 @@ function ElementsPanel({ iframeRef }: ElementsPanelProps) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchElements = async () => {
+        (async () => {
             try {
                 const response = await fetch('http://localhost:3000/elements_htmls');
                 if (!response.ok) {
@@ -31,9 +31,7 @@ function ElementsPanel({ iframeRef }: ElementsPanelProps) {
             } finally {
                 setLoading(false);
             }
-        };
-
-        fetchElements();
+        })();
     }, []);
 
     const handlePrevious = () => {
@@ -46,20 +44,17 @@ function ElementsPanel({ iframeRef }: ElementsPanelProps) {
 
     const currentElement = elements[currentIndex];
 
-    // 生成完整的HTML文档
     const htmlContent = useMemo(() => {
         if (!currentElement) return '';
         return generateTableHTML(currentElement.content);
-    }, [elements[currentIndex]?.content]);
+    }, [currentElement?.content]);
 
-    // 创建Blob URL
     const blobUrl = useMemo(() => {
         if (!htmlContent) return '';
         const blob = new Blob([htmlContent], { type: 'text/html' });
         return URL.createObjectURL(blob);
     }, [htmlContent]);
 
-    // 清理Blob URL
     useEffect(() => {
         return () => {
             if (blobUrl) {

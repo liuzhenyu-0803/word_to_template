@@ -4,18 +4,12 @@ import ElementsPanel from './elements-panel/ElementsPanel';
 import DocumentPanel from './document-panel/DocumentPanel';
 import { SyncManager } from './sync-manager';
 
-interface ResultConfirmProps {
-    onBack: () => void;
-}
-
-// 拖拽分隔器配置常量
 const SPLITTER_CONFIG = {
     MIN_WIDTH: 20,
     MAX_WIDTH: 60,
     DEFAULT_WIDTH: 50,
 };
 
-// 自定义 Hook: 处理拖拽分隔器逻辑
 function useSplitter(initialWidth: number = SPLITTER_CONFIG.DEFAULT_WIDTH) {
     const [leftWidth, setLeftWidth] = useState(initialWidth);
     const [isDragging, setIsDragging] = useState(false);
@@ -33,12 +27,6 @@ function useSplitter(initialWidth: number = SPLITTER_CONFIG.DEFAULT_WIDTH) {
             const containerRect = containerRef.current.getBoundingClientRect();
             const containerWidth = containerRect.width;
             
-            // 防止容器宽度为 0 的边界情况
-            if (containerWidth <= 0) {
-                console.warn('Container width is invalid:', containerWidth);
-                return;
-            }
-
             const mouseX = e.clientX - containerRect.left;
             const newLeftWidth = (mouseX / containerWidth) * 100;
 
@@ -77,6 +65,10 @@ function useSplitter(initialWidth: number = SPLITTER_CONFIG.DEFAULT_WIDTH) {
     };
 }
 
+interface ResultConfirmProps {
+    onBack: () => void;
+}
+
 export default function ResultConfirm({ onBack }: ResultConfirmProps) {
     const { leftWidth, isDragging, containerRef, handleMouseDown } = useSplitter();
     const [isSaving, setIsSaving] = useState(false);
@@ -85,7 +77,6 @@ export default function ResultConfirm({ onBack }: ResultConfirmProps) {
     const leftIframeRef = useRef<HTMLIFrameElement>(null);
     const rightIframeRef = useRef<HTMLIFrameElement>(null);
 
-    // 处理iframe的pointer-events，防止拖拽时iframe拦截鼠标事件
     useEffect(() => {
         if (leftIframeRef.current) {
             leftIframeRef.current.style.pointerEvents = isDragging ? 'none' : 'auto';
@@ -152,8 +143,6 @@ export default function ResultConfirm({ onBack }: ResultConfirmProps) {
             if (!response.ok) {
                 throw new Error(`保存失败: ${response.status}`);
             }
-
-            console.log('保存成功');            
         } catch (error) {
             console.error('保存失败:', error);
         } finally {

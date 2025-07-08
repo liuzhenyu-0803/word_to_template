@@ -11,7 +11,7 @@ function DocumentPanel({ iframeRef }: DocumentPanelProps) {
     const [error, setError] = useState<string>('');
 
     useEffect(() => {
-        const fetchDocument = async () => {
+        (async () => {
             try {
                 const response = await fetch('http://localhost:3000/document_html');
                 if (!response.ok) {
@@ -25,16 +25,14 @@ function DocumentPanel({ iframeRef }: DocumentPanelProps) {
             } finally {
                 setLoading(false);
             }
-        };
-
-        fetchDocument();
+        })();
 
         return () => {
             if (docUrl) {
                 URL.revokeObjectURL(docUrl);
             }
         };
-    }, []);
+    }, [docUrl]);
 
     return (
         <div className="document-panel">
