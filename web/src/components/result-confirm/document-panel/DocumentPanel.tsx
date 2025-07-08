@@ -26,10 +26,13 @@ function DocumentPanel({ iframeRef }: DocumentPanelProps) {
                 setLoading(false);
             }
         })();
+    }, []);
 
+    useEffect(() => {
+        const currentUrl = docUrl;
         return () => {
-            if (docUrl) {
-                URL.revokeObjectURL(docUrl);
+            if (currentUrl) {
+                URL.revokeObjectURL(currentUrl);
             }
         };
     }, [docUrl]);
