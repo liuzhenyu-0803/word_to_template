@@ -31,6 +31,7 @@ class WebSocketClient:
     async def send(self, data):
         if self.websocket:
             await self.websocket.send(json.dumps(data))
+            await asyncio.sleep(0)
 
     async def _receive_loop(self):
         async for message in self.websocket:
