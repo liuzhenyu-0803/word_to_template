@@ -1,14 +1,12 @@
 import { DATA_ORIGINAL_CONTENT } from '../../../constants';
 
 export const TABLE_CSS = `
-/* 全局重置：清除所有元素的 margin 和 padding，统一盒模型 */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* 页面主体布局样式 */
 body {
     width: fit-content;
     height: 100dvh;
@@ -19,12 +17,10 @@ body {
     overflow-y: hidden;
 }
 
-/* 表格整体样式 */
 table {
     border-collapse: collapse;
 }
 
-/* 表格单元格基础样式 */
 td {
     min-width: 100px;
     border: 1px solid #ddd;
@@ -34,7 +30,6 @@ td {
     -webkit-user-select: none;
 }
 
-/* 单元格内容与控件的 flex 容器 */
 .cell-flex-row {
     min-height: 40px;
     display: flex;
@@ -50,7 +45,6 @@ td {
     overflow-wrap: break-word;
 }
 
-/* 单元格内输入框样式 */
 td textarea {
     flex: 1; 
     min-width: 0;
@@ -61,7 +55,6 @@ td textarea {
     resize: none;
 }
 
-/* 控制按钮容器（编辑/下拉/撤销） */
 .controls {
     display: flex;
     gap: 5px;
@@ -69,19 +62,16 @@ td textarea {
     opacity: 0;
 }
 
-/* 悬停单元格时显示控制按钮 */
 td:hover .controls {
     opacity: 1;
 }
 
-/* 控制按钮基础样式 */
 .controls button {
     cursor: pointer;
     border: none;
     background: none;
 }
 
-/* 下拉菜单容器样式 */
 .dropdown-content {
     display: none;
     position: absolute;
@@ -93,12 +83,10 @@ td:hover .controls {
     top: 100%;
 }
 
-/* 显示下拉菜单的样式 */
 .dropdown-content.show {
     display: block;
 }
 
-/* 下拉菜单选项样式 */
 .dropdown-content a {
     color: black;
     padding: 12px 16px;
@@ -106,7 +94,6 @@ td:hover .controls {
     display: block;
 }
 
-/* 下拉菜单选项悬停高亮 */
 .dropdown-content a:hover {
     background-color: #f1f1f1;
 }`;
@@ -166,7 +153,6 @@ export const TABLE_JS = `
                 textarea.value = contentSpan.textContent;
 
                 textarea.style.width = contentSpan.offsetWidth + 'px';
-                // 使用常量计算最小高度
                 textarea.style.height = contentSpan.offsetHeight + 'px';
 
                 contentSpan.style.display = 'none';
@@ -228,7 +214,7 @@ export const TABLE_JS = `
     window.addEventListener('click', handleGlobalClick);
 })();`;
 
-export const generateTableHTML = (content: string): string => {
+export function generateTableHTML(content: string): string {
     return `
 <!DOCTYPE html>
 <html lang="zh-CN">
