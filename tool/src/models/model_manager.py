@@ -16,7 +16,7 @@ class ModelManager:
     """
     
     def __init__(self, 
-                 api_key: str = "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",
+                 api_key: str = "",
                  base_url: str = "https://openrouter.ai/api/v1",
                  model: str = "google/gemma-3n-e4b-it"):
         """

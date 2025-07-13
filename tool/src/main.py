@@ -42,25 +42,25 @@ async def main():
         await callback_handler.output_callback("\n===== 步骤2: 文档元素提取 =====")
         await extract_document(html_path, extract_dir)
 
-        # # 步骤3: 替换文档元素
-        # await callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
-        # extracted_files = [
-        #     os.path.join(project_dir, "document/document_extract/table_1.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_2.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_3.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_4.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_5.html"),
-        #     os.path.join(project_dir, "document/document_extract/table_6.html"),
-        # ]
-        # await replace_document(extracted_files, key_descriptions_dir)
+        # 步骤3: 替换文档元素
+        await callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
+        extracted_files = [
+            os.path.join(project_dir, "document/document_extract/table_1.html"),
+            # os.path.join(project_dir, "document/document_extract/table_2.html"),
+            # os.path.join(project_dir, "document/document_extract/table_3.html"),
+            # os.path.join(project_dir, "document/document_extract/table_4.html"),
+            # os.path.join(project_dir, "document/document_extract/table_5.html"),
+            # os.path.join(project_dir, "document/document_extract/table_6.html"),
+        ]
+        await replace_document(extracted_files, key_descriptions_dir)
         
-        # # 步骤4: 生成模板文档
-        # await callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")
-        # await save_document(doc_path, extract_dir, template_doc_path)
+        # 步骤4: 生成模板文档
+        await callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")
+        await save_document(doc_path, extract_dir, template_doc_path)
 
-        # # 计算总耗时
-        # total_time = time.time() - start_time
-        # await callback_handler.output_callback(f"\n===== 处理完成，总耗时: {total_time:.2f} 秒 =====")
+        # 计算总耗时
+        total_time = time.time() - start_time
+        await callback_handler.output_callback(f"\n===== 处理完成，总耗时: {total_time:.2f} 秒 =====")
         
     except Exception as e:
         await callback_handler.output_callback(f"处理过程中发生错误: {e}")
