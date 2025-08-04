@@ -7,45 +7,44 @@ import re
 from bs4 import BeautifulSoup
 from docx.document import Document
 from docx.table import Table
-from global_define.constants import ATTR_ORIGINAL_CONTENT
+from global_define.constants import ATTR_ORIGINAL_CONTENT, TABLE_FILE_PREFIX, HTML_FILE_EXTENSION
 
-async def save_tables(doc: Document, table_files: list[str]) -> None:
+from global_define import constants
+
+async def save_tables(doc: Document, html_content: str) -> None:
     """
     将HTML表格中的内容更新到Word文档对象中对应的表格。
     此实现通过构建逻辑网格来正确处理合并单元格，并正确处理嵌套表格。
-
-    参数:
-        doc: python-docx的Document对象
-        table_files: 包含替换内容的HTML表格文件列表
     """
     try:
         # 收集所有表格，包括嵌套表格，使用与提取阶段一致的深度优先遍历
         all_tables = _collect_all_tables_dfs(doc)
         
-        for table_file in table_files:
-            base_name = os.path.basename(table_file)
-            table_index = int(base_name.split('_')[1].split('.')[0]) - 1
+        soup = BeautifulSoup(html_content, 'html.parser')
+        html_tables = soup.find_all('table', recursive=True) # 获取所有HTML表格
+        
+        if not html_tables:
+            await callback_handler.output_callback("HTML内容中未找到任何表格。")
+            return
 
-            with open(table_file, 'r', encoding='utf-8') as f:
-                soup = BeautifulSoup(f.read(), 'html.parser')
-                html_table = soup.find('table')
-                
-                if not html_table:
-                    continue
+        for table_index, html_table in enumerate(html_tables):
+            if table_index >= len(all_tables):
+                await callback_handler.output_callback(f"警告: Word文档中没有与HTML表格 {table_index + 1} 对应的表格。")
+                continue
 
-                doc_table = all_tables[table_index]
-                html_grid = _build_grid_from_html(html_table)
-                
-                for r, row in enumerate(html_grid):
-                    for c, cell in enumerate(row):
-                        if cell and cell.has_attr(ATTR_ORIGINAL_CONTENT):
-                            try:
-                                doc_cell = doc_table.cell(r, c)
-                                doc_cell.text = cell.get_text(strip=True)
+            doc_table = all_tables[table_index]
+            html_grid = _build_grid_from_html(html_table)
+            
+            for r, row in enumerate(html_grid):
+                for c, cell in enumerate(row):
+                    if cell and cell.has_attr(ATTR_ORIGINAL_CONTENT):
+                        try:
+                            doc_cell = doc_table.cell(r, c)
+                            doc_cell.text = cell.get_text(strip=True)
 
-                            except IndexError:
-                                await callback_handler.output_callback(f"警告: 表格 {table_index + 1} 的坐标 ({r}, {c}) 超出范围。")
-
+                        except IndexError:
+                            await callback_handler.output_callback(f"警告: 表格 {table_index + 1} 的坐标 ({r}, {c}) 超出范围。")
+        doc.save(constants.DEFAULT_TEMPLATE_DOC_PATH)
     except Exception as e:
         await callback_handler.output_callback(f"保存表格时出错: {e}")
 

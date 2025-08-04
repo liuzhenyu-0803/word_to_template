@@ -6,12 +6,18 @@ from callback.callback import callback_handler
 
 import os
 from bs4 import BeautifulSoup
-from global_define.constants import ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_CELL_ID, ATTR_ORIGINAL_CONTENT
+from global_define.constants import (
+    ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_CELL_ID, ATTR_ORIGINAL_CONTENT,
+    TABLE_FILE_PREFIX, HTML_FILE_EXTENSION
+)
 
 
-async def extract_tables(html_file_path: str, output_dir: str) -> None:
-    """从HTML文件中提取所有表格，每个表格保存为独立HTML文件"""
+from global_define import constants
+
+async def extract_tables() -> list[str]:
+    """从HTML文件中提取所有表格，返回表格HTML字符串列表"""
     try:
+        html_file_path = constants.DEFAULT_HTML_PATH
         try:
             with open(html_file_path, 'r', encoding='utf-8') as file:
                 html_content = file.read()
@@ -23,18 +29,13 @@ async def extract_tables(html_file_path: str, output_dir: str) -> None:
         
         if not table_html_strings:
             await callback_handler.output_callback("未找到任何表格")
-            return
+            return []
         
-        for i, table_html in enumerate(table_html_strings):
-            table_count = i + 1
-            output_file = os.path.join(output_dir, f"table_{table_count}.html")
-            with open(output_file, 'w', encoding='utf-8') as file:
-                file.write(table_html)
-            await callback_handler.output_callback(f"表格 {table_count} 已保存")
-        
-        await callback_handler.output_callback(f"总共保存了 {len(table_html_strings)} 个表格")
+        await callback_handler.output_callback(f"总共提取了 {len(table_html_strings)} 个表格")
+        return table_html_strings
     except Exception as e:
         await callback_handler.output_callback(f"表格提取失败: {e}")
+        return []
 
 
 async def get_tables_from_html(html_content: str) -> list[str]:
@@ -59,9 +60,18 @@ async def get_tables_from_html(html_content: str) -> list[str]:
         for i, html_table in enumerate(html_tables):
             clean_html_table = _create_clean_table(html_table, i)
             if clean_html_table:
-                table_html_strings.append(str(clean_html_table))
-        
-        await callback_handler.output_callback(f"总共处理了 {len(html_tables)} 个表格，提取了 {len(table_html_strings)} 个表格")
+                table_html_string = str(clean_html_table)
+                table_html_strings.append(table_html_string)
+                
+                # 保存提取的表格到文件
+                if not os.path.exists(constants.EXTRACT_DIR):
+                    os.makedirs(constants.EXTRACT_DIR)
+                file_path = os.path.join(constants.EXTRACT_DIR, f"{TABLE_FILE_PREFIX}{i+1}{HTML_FILE_EXTENSION}")
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(table_html_string)
+                await callback_handler.output_callback(f"已保存表格 {i+1} 到 {file_path}")
+
+        await callback_handler.output_callback(f"总共处理了 {len(html_tables)} 个表格，提取并保存了 {len(table_html_strings)} 个表格")
         return table_html_strings
             
     except Exception as e:
@@ -101,6 +111,11 @@ def _create_clean_table(html_table, table_idx):
 def _create_clean_row(original_row, soup):
     """创建简化的表格行，保留原始标记属性"""
     new_row = soup.new_tag('tr')
+    
+    # 如果tr有data-has-nested-table="true"属性，则清空内容
+    if original_row.has_attr(ATTR_HAS_NESTED_TABLE) and original_row[ATTR_HAS_NESTED_TABLE] == 'true':
+        return new_row # 返回一个空的tr标签
+        
     cells = original_row.find_all(['td', 'th'], recursive=False)
     
     for cell in cells:
@@ -111,10 +126,14 @@ def _create_clean_row(original_row, soup):
             if cell.has_attr(attr):
                 new_cell[attr] = cell[attr]
         
-        # 设置单元格内容
-        cell_text = cell.get_text(strip=True)
-        if cell_text:
-            new_cell.string = cell_text
+        # 如果单元格有data-has-nested-table="true"属性，则清空内容
+        if new_cell.has_attr(ATTR_HAS_NESTED_TABLE) and new_cell[ATTR_HAS_NESTED_TABLE] == 'true':
+            new_cell.string = "" # 清空内容
+        else:
+            # 设置单元格内容
+            cell_text = cell.get_text(strip=True)
+            if cell_text:
+                new_cell.string = cell_text
         
         new_row.append(new_cell)
     

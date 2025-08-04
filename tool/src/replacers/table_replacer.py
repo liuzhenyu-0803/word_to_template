@@ -32,46 +32,48 @@ async def _call_llm_and_parse_json(prompt: str):
         await callback_handler.output_callback(f"调用LLM或解析时出错: {e}")
         return None
 
-async def replace_tables(table_files: list[str],
-                   table_key_description_path: str
-                   ) -> None:
-    """
-    对提取的表格进行语义匹配分析，并用LLM生成的标签替换内容
-    """
-    if not table_files:
-        await callback_handler.output_callback("没有需要处理的表格文件。")
-        return
+from global_define import constants
 
-    for table_file in table_files:
-        try:
-            await callback_handler.output_callback(f"--- 开始处理表格: {os.path.basename(table_file)} ---")
+async def replace_tables(html_file_path: str, table_html_strings: list[str], table_key_description_path: str) -> None:
+    """
+    对HTML中的表格进行语义匹配分析，并用LLM生成的标签替换内容
+    """
+    try:
+        html_file_path = constants.DEFAULT_HTML_PATH
+        await callback_handler.output_callback(f"--- 开始处理HTML文件中的表格: {os.path.basename(html_file_path)} ---")
+        
+        # 1. 读取完整的HTML内容
+        with open(html_file_path, 'r', encoding='utf-8') as f:
+            full_html_content = f.read()
+        
+        soup = BeautifulSoup(full_html_content, 'html.parser')
+        
+        if not table_html_strings:
+            await callback_handler.output_callback("没有需要处理的表格。")
+            return
+
+        modified_total_count = 0
+        for table_idx, table_content in enumerate(table_html_strings):
+            await callback_handler.output_callback(f"处理第 {table_idx + 1} 个表格...")
+
+            # 2. 读取 prompt_1 内容并构造 prompt
+            prompt_1_path = os.path.join(os.path.dirname(__file__), "table_prompt_1.txt")
+            with open(prompt_1_path, 'r', encoding='utf-8') as f:
+                prompt_1_template = f.read()
             
-            # 1. 读取表格内容
-            with open(table_file, 'r', encoding='utf-8') as f:
-                table_content = f.read()
-
-            # 2. 构造并执行 prompt_1
-            prompt_1 = (
-                "使用COT思考以下任务。\n"
-                "充分理解表格内容，然后提取表格中的key-value关系。\n"
-                "key：用来描述其它单元格中的内容，可由多个标签共同构成。\n"
-                "value：单元格中需要填充或已填充的具体数值或内容。\n"
-                "输出格式：[{\"key\": key, \"value\": value, \"value-cell-id\": value-cell-id}, ...]"
-                f"表格内容：{table_content}\n"
-            )
+            prompt_1 = prompt_1_template.replace("{table_content}", table_content)
             
             await callback_handler.output_callback("步骤 1/2: 提取键值对...")
             kv_pairs = await _call_llm_and_parse_json(prompt_1)
 
             if not kv_pairs or not isinstance(kv_pairs, list):
-                await callback_handler.output_callback(f"警告：未能获取有效的键值对列表，跳过文件 {table_file}")
+                await callback_handler.output_callback(f"警告：未能获取有效的键值对列表，跳过当前表格。")
                 continue
             
             await callback_handler.output_callback(f"成功提取 {len(kv_pairs)} 个键值对。")
 
             # 3. 修改表格内容
             await callback_handler.output_callback("步骤 2/2: 更新表格HTML内容...")
-            soup = BeautifulSoup(table_content, 'html.parser')
             modified_count = 0
             for item in kv_pairs:
                 if not isinstance(item, dict):
@@ -81,6 +83,7 @@ async def replace_tables(table_files: list[str],
                 value_cell_id = item.get('value-cell-id')
 
                 if key and value_cell_id:
+                    # 在整个soup中查找单元格
                     cell = soup.find(attrs={'data-cell-id': value_cell_id})
                     if cell:
                         original_content = cell.string or ""
@@ -88,15 +91,16 @@ async def replace_tables(table_files: list[str],
                         cell.string = f"{{{key}}}"
                         modified_count += 1
             
-            await callback_handler.output_callback(f"已更新 {modified_count} 个单元格。")
+            await callback_handler.output_callback(f"已更新当前表格中 {modified_count} 个单元格。")
+            modified_total_count += modified_count
+        
+        # 4. 写回文件
+        with open(html_file_path, 'w', encoding='utf-8') as f:
+            f.write(str(soup))
+        
+        await callback_handler.output_callback(f"--- 完成处理HTML文件: {os.path.basename(html_file_path)}，共更新 {modified_total_count} 个单元格。---\n")
 
-            # 4. 写回文件
-            with open(table_file, 'w', encoding='utf-8') as f:
-                f.write(str(soup))
-            
-            await callback_handler.output_callback(f"--- 完成处理: {os.path.basename(table_file)} ---\n")
-
-        except Exception as e:
-            await callback_handler.output_callback(f"处理文件 {table_file} 时发生严重错误: {e}")
-            import traceback
-            traceback.print_exc()
+    except Exception as e:
+        await callback_handler.output_callback(f"处理文件 {html_file_path} 时发生严重错误: {e}")
+        import traceback
+        traceback.print_exc()

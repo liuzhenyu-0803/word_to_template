@@ -3,7 +3,10 @@ import websockets
 import json
 import requests
 import os
-from global_define.constants import WS_MESSAGE_TYPE
+from global_define.constants import (
+    WS_MESSAGE_TYPE, WS_SERVER_URL, CLIENT_NAME, HTTP_SERVER_URL,
+    TEMPLATE_UPLOAD_FILENAME, TEMPLATE_MIME_TYPE
+)
 
 class WebSocketClient:
     def __init__(self, url, client_name, on_message=None):
@@ -65,10 +68,10 @@ async def on_message(msg):
         callback_handler.output_callback(f"处理消息时出错: {str(e)}")
 
 # 单例 WebSocketClient 实例，可被其它模块直接引用
-ws_client = WebSocketClient("ws://localhost:3000", "tool_client", on_message)
+ws_client = WebSocketClient(WS_SERVER_URL, CLIENT_NAME, on_message)
 
 
-async def upload_template(template_path: str, server_url: str = "http://localhost:3000"):
+async def upload_template(template_path: str, server_url: str = HTTP_SERVER_URL):
     """
     上传模板文件到服务器
     :param template_path: 模板文件路径
@@ -82,7 +85,7 @@ async def upload_template(template_path: str, server_url: str = "http://localhos
         url = f"{server_url}/template"
         
         with open(template_path, 'rb') as file:
-            files = {'file': ('template.docx', file, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')}
+            files = {'file': (TEMPLATE_UPLOAD_FILENAME, file, TEMPLATE_MIME_TYPE)}
             response = requests.post(url, files=files)
         
         if response.status_code == 200:

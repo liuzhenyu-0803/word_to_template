@@ -8,36 +8,44 @@ from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 import zipfile
 import tempfile
-from global_define.constants import ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_CELL_ID
+from global_define.constants import ATTR_DIAGONAL_SPLIT_TYPE, ATTR_HAS_NESTED_TABLE, ATTR_CELL_ID, ATTR_HAS_IMG, DEFAULT_DOC_PATH, DEFAULT_HTML_PATH, WORD_INTERNAL_DIR, DOCUMENT_XML_FILE_NAME
+from PIL import Image
+import base64
+import io
 
 
-async def convert_document(word_file, html_file):
+async def convert_document():
     """使用PyDocX库将Word文件完整转换为HTML并添加标记"""
     try:
-        html_content = get_html_from_document(word_file)
-        with open(html_file, 'w', encoding='utf-8') as f:
+        html_content = get_html_from_document()
+        with open(DEFAULT_HTML_PATH, 'w', encoding='utf-8') as f:
             f.write(html_content)
-        await callback_handler.output_callback(f"成功导出: {html_file}")
+        await callback_handler.output_callback(f"成功导出: {DEFAULT_HTML_PATH}")
     except Exception as e:
         await callback_handler.output_callback(f"导出失败: {e}")
 
 
-def get_html_from_document(word_file):
+def get_html_from_document():
     """使用PyDocX库将Word文件完整转换为HTML并添加标记"""
-    html_content = PyDocX.to_html(word_file)
-    return _mark_cells(html_content, word_file)
+    html_content = PyDocX.to_html(DEFAULT_DOC_PATH)
+    return _mark_cells(html_content)
 
 
-def _mark_cells(html_content, doc_path):
+def _mark_cells(html_content):
     """在HTML转换过程中标记表格单元格"""
     soup = BeautifulSoup(html_content, 'html.parser')
     
+    # 设置body为可编辑
+    body_tag = soup.find('body')
+    if body_tag:
+        body_tag['contenteditable'] = 'true'
+
     # 解压Word文档获取XML信息
     with tempfile.TemporaryDirectory() as unzip_dir:
-        with zipfile.ZipFile(doc_path, 'r') as zip_ref:
+        with zipfile.ZipFile(DEFAULT_DOC_PATH, 'r') as zip_ref:
             zip_ref.extractall(unzip_dir)
         
-        xml_path = os.path.join(unzip_dir, 'word', 'document.xml')
+        xml_path = os.path.join(unzip_dir, WORD_INTERNAL_DIR, DOCUMENT_XML_FILE_NAME)
         xml_root = ET.parse(xml_path).getroot()
         xml_tables = xml_root.findall('.//w:tbl', {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'})
         
@@ -59,7 +67,20 @@ def _mark_cells(html_content, doc_path):
                     # 检查嵌套表格
                     if cell.find('table'):
                         cell[ATTR_HAS_NESTED_TABLE] = 'true'
+                    
+                    # 标记单元格是否包含图片
+                    if cell.find('img'):
+                        cell[ATTR_HAS_IMG] = 'true'
+
+                    # 对于内容为空的单元格用 "-" 占位，但如果包含图片则不占位
+                    if not cell.find('img') and not cell.get_text(strip=True):
+                        cell.string = "-"
     
+    # 检查并处理img标签的src属性
+    for img_tag in soup.find_all('img'):
+        if not img_tag.get('src'):
+            img_tag['src'] = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" # 1x1 transparent GIF
+
     return str(soup)
 
 def _check_diagonal_split(xml_table, row_idx, cell_idx):

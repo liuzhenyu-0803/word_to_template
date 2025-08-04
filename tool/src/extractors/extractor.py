@@ -7,20 +7,20 @@ import os
 import shutil
 import zipfile
 from . import table_extractor
+from . import image_extractor
+from callback.callback import callback_handler
 
 
-async def extract_document(html_path: str, extract_dir: str):
+async def extract_document() -> list[str]:
     """
-    从HTML文件提取所有内容元素
-    
-    参数:
-        html_path: HTML文件路径
-        extract_dir: 输出目录路径
+    从HTML文件提取所有表格和图片，返回表格HTML字符串列表，并提取图片到指定目录
+
+    返回:
+        list[str]: 表格HTML字符串列表
     """
-    # 检查并清理输出目录
-    if os.path.exists(extract_dir):
-        shutil.rmtree(extract_dir)
-    os.makedirs(extract_dir)
-    
     # 处理表格
-    await table_extractor.extract_tables(html_path, extract_dir)
+    tables = await table_extractor.extract_tables()
+    # 提取图片
+    image_paths = image_extractor.extract_and_save_images()
+    await callback_handler.output_callback(f"已提取图片数量: {len(image_paths)}")
+    return tables

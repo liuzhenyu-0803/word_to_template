@@ -6,28 +6,23 @@ import os
 from docx import Document
 from savers import table_saver
 
-async def save_document(doc_path: str, extract_dir: str, template_doc_path: str) -> None:
-    """
-    将替换后的表格内容保存回新的Word文档
+from global_define import constants
 
-    参数:
-        doc_path: 原始Word文档路径
-        extract_dir: 包含提取后(可能已修改)的HTML文件的目录
-        template_doc_path: 保存模板化Word文档的路径
+async def save_document() -> None:
+    """
+    将替换后的内容保存回新的Word文档
     """
     try:
+        doc_path = constants.DEFAULT_DOC_PATH
+        html_file_path = constants.DEFAULT_HTML_PATH
+        template_doc_path = constants.DEFAULT_TEMPLATE_DOC_PATH
         doc = Document(doc_path)
         
-        # 提取所有替换后的表格HTML文件路径
-        import re
-        table_files = sorted([
-            os.path.join(extract_dir, f)
-            for f in os.listdir(extract_dir)
-            if re.match(r'^table_\d+\.html$', f) and os.path.isfile(os.path.join(extract_dir, f))
-        ])
+        # 读取完整的HTML内容
+        with open(html_file_path, 'r', encoding='utf-8') as f:
+            html_content = f.read()
 
-        if table_files:
-            await table_saver.save_tables(doc, table_files)
+        await table_saver.save_tables(doc, html_content)
         
         # 确保目标目录存在
         os.makedirs(os.path.dirname(template_doc_path), exist_ok=True)

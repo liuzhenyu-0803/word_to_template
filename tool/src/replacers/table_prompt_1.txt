@@ -1,0 +1,14 @@
+充分理解表格内容，然后提取表格中key-value关系。
+-表格内容：取自热成像报告。
+-key：字段名，由表格中单个或多个标签单元格内容组合构成（可以进行适当的调整使语言更通顺；可以参考值单元格内容让语义更完整）。
+-value：字段值，需要填充或已填充的具体字段内容。
+
+注意：
+-单元格若有data-has-nested-table="true"标记，则忽略这个单元格。
+-单元格若有data-has-img="true"标记，则忽略这个单元格。
+
+输出格式：
+[{"key": key, "value": value, "value-cell-id": value-cell-id}, ...]
+
+表格内容：
+{table_content}

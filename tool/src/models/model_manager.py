@@ -16,7 +16,7 @@ class ModelManager:
     """
     
     def __init__(self, 
-                 api_key: str = "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",
+                 api_key: str = "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",
                  base_url: str = "https://openrouter.ai/api/v1",
                  model: str = "google/gemma-3n-e4b-it"):
         """
@@ -32,16 +32,24 @@ class ModelManager:
         self.model = model
         # self.model = "google/gemma-3-12b-it"
         # self.model = "google/gemma-3-12b-it"
-        self.model = "amazon/nova-lite-v1"
+        self.model = "google/gemini-2.5-flash"
         # self.model = "google/gemini-2.0-flash-lite-001"
         # self.model = "google/gemini-2.5-flash-lite-preview-06-17"
     
-    def create_completion(self, messages: List[Dict[str, str]]):
+    def create_completion(self, messages: List[Dict]):
         """
-        流式创建聊天完成
+        流式创建聊天完成，支持多模态（文本+图片）
 
         Args:
-            messages: 消息列表，格式为[{"role": "user", "content": "内容"}]
+            messages: 消息列表，支持如下格式：
+                [
+                    {"role": "user", "content": [
+                        {"type": "text", "text": "描述文本"},
+                        {"type": "image_url", "image_url": {"url": "图片URL或base64"}}
+                    ]},
+                    ...
+                ]
+            兼容纯文本消息 [{"role": "user", "content": "内容"}]
 
         Yields:
             str: 每次生成的内容片段
@@ -58,6 +66,7 @@ class ModelManager:
                 stream=True
             )
             for chunk in stream:
+                # OpenAI/Google Gemini 多模态接口返回结构兼容
                 if hasattr(chunk.choices[0].delta, "content") and chunk.choices[0].delta.content:
                     yield chunk.choices[0].delta.content
         except Exception as e:

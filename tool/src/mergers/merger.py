@@ -7,23 +7,10 @@ import os
 from . import table_merger
 
 
-async def merge_html(html_path: str, extract_dir: str) -> None:
+async def merge_html(html_path: str) -> None:
     """
-    将处理后的元素HTML文件合并回总的HTML文件中
-    
-    参数:
-        html_path: 原始HTML文件路径
-        extract_dir: 包含处理后元素HTML文件的目录
+    此函数不再执行HTML合并操作，因为表格处理已改为直接在完整HTML上进行。
     """
-    try:
-        await callback_handler.output_callback(f"开始合并HTML文件: {html_path}")
-        
-        # 合并表格
-        await table_merger.merge_tables(html_path, extract_dir)
-        
-        await callback_handler.output_callback(f"HTML文件合并完成: {html_path}")
-        
-    except Exception as e:
-        await callback_handler.output_callback(f"合并HTML文件时出错: {e}")
-        import traceback
-        traceback.print_exc()
+    await callback_handler.output_callback("merge_html: HTML合并功能已废弃。")
+    # 移除对 table_merger 的调用，因为它现在是空操作
+    # await table_merger.merge_tables(html_path, extract_dir)
