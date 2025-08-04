@@ -4,6 +4,7 @@ Word文档智能模板生成系统 - 主程序
 """
 
 import time
+import os
 from models.model_manager import llm_manager
 from converter.converter import convert_document
 from extractors.extractor import extract_document
@@ -33,16 +34,17 @@ async def main():
         table_html_strings = await extract_document()
 
         # 步骤3: 替换文档元素
-        # await callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
-        # await replace_document(table_html_strings)
+        await callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
+        # 使用从extract_document返回的table_html_strings进行替换
+        await replace_document(table_html_strings)
         
         # 步骤4: 生成模板文档
-        # await callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")
-        # await save_document()
+        await callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")
+        await save_document()
 
-        # # 计算总耗时
-        # total_time = time.time() - start_time
-        # await callback_handler.output_callback(f"\n===== 处理完成，总耗时: {total_time:.2f} 秒 =====")
+        # 计算总耗时
+        total_time = time.time() - start_time
+        await callback_handler.output_callback(f"\n===== 处理完成，总耗时: {total_time:.2f} 秒 =====")
         
     except Exception as e:
         await callback_handler.output_callback(f"处理过程中发生错误: {e}")

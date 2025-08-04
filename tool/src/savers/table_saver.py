@@ -40,7 +40,20 @@ async def save_tables(doc: Document, html_content: str) -> None:
                     if cell and cell.has_attr(ATTR_ORIGINAL_CONTENT):
                         try:
                             doc_cell = doc_table.cell(r, c)
-                            doc_cell.text = cell.get_text(strip=True)
+                            # 为了保留样式，我们修改第一个run的文本并删除其余的runs
+                            new_text = cell.get_text(strip=True)
+                            # 假设我们只处理单元格的第一个段落
+                            p = doc_cell.paragraphs[0]
+                            if p.runs:
+                                # 直接修改第一个run的文本，保留其样式
+                                p.runs[0].text = new_text
+                                # 删除段落中多余的run（从后往前删除）
+                                for i in range(len(p.runs) - 1, 0, -1):
+                                    r = p.runs[i]
+                                    p._p.remove(r._r)
+                            else:
+                                # 如果单元格为空，则添加一个新的run
+                                p.add_run(new_text)
 
                         except IndexError:
                             await callback_handler.output_callback(f"警告: 表格 {table_index + 1} 的坐标 ({r}, {c}) 超出范围。")
