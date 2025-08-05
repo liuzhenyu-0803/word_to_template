@@ -4,7 +4,7 @@
 from callback.callback import callback_handler
 import os
 from docx import Document
-from savers import table_saver
+from savers import table_saver, image_saver
 
 from global_define import constants
 
@@ -30,6 +30,9 @@ async def save_document() -> None:
         # 保存为新文档
         doc.save(template_doc_path)
         await callback_handler.output_callback(f"模板文件已成功保存至: {template_doc_path}")
+
+        # 调用image_saver来处理图片
+        await image_saver.save_images()
 
     except Exception as e:
         await callback_handler.output_callback(f"保存文档时出错: {e}")

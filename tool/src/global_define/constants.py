@@ -10,6 +10,15 @@ TEST_DOCUMENTS_DIR = os.path.join(DOCUMENT_DIR, "test_documents")
 EXTRACT_DIR = os.path.join(DOCUMENT_DIR, "document_extract")
 UNZIP_DIR = os.path.join(DOCUMENT_DIR, "unzip")
 KEY_DESCRIPTIONS_DIR = os.path.join(DOCUMENT_DIR, "key_descriptions")
+PLACEHOLDER_IMAGES_DIR = os.path.join(DOCUMENT_DIR, "placeholder_images")
+
+# 图片映射文件
+IMAGE_MAP_FILE_NAME = "image_map.json"
+IMAGE_MAP_PATH = os.path.join(EXTRACT_DIR, IMAGE_MAP_FILE_NAME)
+
+# 图片占位符映射文件
+IMAGE_PLACEHOLDER_MAP_FILE_NAME = "image_placeholder_map.json"
+IMAGE_PLACEHOLDER_MAP_PATH = os.path.join(EXTRACT_DIR, IMAGE_PLACEHOLDER_MAP_FILE_NAME)
 
 # --- 文件名和路径 ---
 DEFAULT_DOC_PATH = os.path.join(TEST_DOCUMENTS_DIR, "报告1.docx")

@@ -11,7 +11,7 @@ from extractors.extractor import extract_document
 from replacers.replacer import replace_document
 from savers.saver import save_document
 from callback.callback import callback_handler
-from global_define import constants # 导入constants模块
+from global_define import constants
 
 import asyncio
 
@@ -25,18 +25,18 @@ async def main():
     start_time = time.time()
     
     try:
-        # 步骤1: Word文档转换为HTML
-        await callback_handler.output_callback("\n===== 步骤1: 文档转换 =====")
-        await convert_document()
+        # # # 步骤1: Word文档转换为HTML
+        # await callback_handler.output_callback("\n===== 步骤1: 文档转换 =====")
+        # await convert_document()
 
-        # 步骤2: 提取文档元素
-        await callback_handler.output_callback("\n===== 步骤2: 文档元素提取 =====")
-        table_html_strings = await extract_document()
-
-        # 步骤3: 替换文档元素
-        await callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
-        # 使用从extract_document返回的table_html_strings进行替换
-        await replace_document(table_html_strings)
+        # # 步骤2: 提取文档元素
+        # await callback_handler.output_callback("\n===== 步骤2: 文档元素提取 =====")
+        # table_html_strings = await extract_document(constants.UNZIP_DIR)
+        
+        # # 步骤3: 替换文档元素
+        # await callback_handler.output_callback("\n===== 步骤3: 文档元素替换 =====")
+        # # 使用从extract_document返回的table_html_strings进行替换
+        # await replace_document(table_html_strings)
         
         # 步骤4: 生成模板文档
         await callback_handler.output_callback("\n===== 步骤4: 模板文档生成 =====")
@@ -51,7 +51,7 @@ async def main():
         import traceback
         traceback.print_exc()
 
-# 直接运行时的入口点  
+# 直接运行时的入口点
 if __name__ == "__main__":
     # 启动异步事件循环并运行main()协程，方式与client.py一致
     import asyncio
